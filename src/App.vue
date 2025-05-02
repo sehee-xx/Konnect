@@ -1,30 +1,45 @@
-<script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
-</script>
-
+<!-- src/App.vue -->
 <template>
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
-  </div>
-  <HelloWorld msg="Vite + Vue" />
+  <router-view />
+  <button class="btn-translate" @click="toggleLocale">
+    {{ currentLocale === "en" ? "KR" : "EN" }}
+  </button>
 </template>
 
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+<script setup>
+import { useI18n } from "vue-i18n";
+import { computed } from "vue";
+
+const { locale } = useI18n();
+const currentLocale = computed(() => locale.value);
+function toggleLocale() {
+  locale.value = locale.value === "en" ? "ko" : "en";
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+</script>
+
+<style>
+.btn-translate {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  background: #333;
+  color: #fff;
+  border: none;
+  border-radius: 1rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: background 0.2s ease, transform 0.1s ease;
+  z-index: 1000;
 }
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
+.btn-translate:hover {
+  background: #bf3b38;
+  transform: translateY(-1px);
+}
+.btn-translate:active {
+  background: #a73332;
+  transform: translateY(0);
 }
 </style>
