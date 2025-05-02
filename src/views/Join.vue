@@ -131,39 +131,31 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
-$bg: #edf2f0;
-$neu-1: #ecf0f3;
-$neu-2: #d1d9e6;
-$white: #f9f9f9;
-$gray: #a0a5a8;
-$dark-gray: #333;
-$red: #c2372f;
-$transition: 1.25s;
-
+<style scoped>
+/* reset */
 *,
-*::after,
-*::before {
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   user-select: none;
 }
 
-/* Generic styles */
+/* body */
 body {
   width: 100%;
   height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-family: "Arial", sans-serif;
+  font-family: Arial, sans‑serif;
   font-size: 12px;
-  background-color: $bg;
-  color: $gray;
+  background-color: #edf2f0;
+  color: #a0a5a8;
 }
 
-/* Main container */
+/* main container */
 .main {
   position: relative;
   width: 1000px;
@@ -171,13 +163,13 @@ body {
   min-height: 600px;
   height: 600px;
   padding: 25px;
-  background-color: $neu-1;
-  box-shadow: 10px 10px 20px $neu-2, -10px -10px 20px $white;
+  background-color: #ecf0f3;
+  box-shadow: 10px 10px 20px #d1d9e6, -10px -10px 20px #f9f9f9;
   border-radius: 12px;
   overflow: hidden;
 }
 
-/* Form containers */
+/* form panels */
 .container {
   display: flex;
   justify-content: center;
@@ -187,123 +179,10 @@ body {
   width: 600px;
   height: 100%;
   padding: 25px;
-  background-color: $neu-1;
-  transition: $transition;
+  background-color: #ecf0f3;
+  transition: 1.25s;
 }
 
-.form {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  width: 100%;
-  height: 100%;
-
-  &__icons {
-    display: flex;
-    justify-content: center;
-    margin: 20px 0;
-  }
-
-  &__icon {
-    width: 40px;
-    height: 40px;
-    margin: 0 10px;
-    opacity: 0.5;
-    transition: 0.15s;
-
-    &:hover {
-      opacity: 1;
-      cursor: pointer;
-    }
-  }
-
-  &__span {
-    margin: 15px 0;
-    font-size: 12px;
-    color: $gray;
-  }
-
-  &__input {
-    width: 350px;
-    height: 40px;
-    margin: 8px 0;
-    padding-left: 25px;
-    font-size: 13px;
-    letter-spacing: 0.15px;
-    border: none;
-    outline: none;
-    background-color: $neu-1;
-    transition: 0.25s ease;
-    border-radius: 8px;
-    box-shadow: inset 2px 2px 4px $neu-2, inset -2px -2px 4px $white;
-    font-family: "Tenada", sans-serif;
-    color: #333;
-    ::placeholder {
-      color: #a0a5a8;
-    }
-
-    &:focus {
-      box-shadow: inset 4px 4px 4px $neu-2, inset -4px -4px 4px $white;
-    }
-  }
-
-  &__link {
-    margin-top: 15px;
-    margin-bottom: 20px;
-    color: $dark-gray;
-    font-size: 12px;
-    text-decoration: none;
-    line-height: 2;
-  }
-}
-
-.title {
-  font-size: 34px;
-  font-weight: 700;
-  line-height: 3;
-  color: $dark-gray;
-  margin-bottom: 10px;
-}
-
-.description {
-  font-size: 14px;
-  letter-spacing: 0.25px;
-  text-align: center;
-  line-height: 1.6;
-  margin-bottom: 20px;
-  color: $dark-gray;
-}
-
-.button {
-  width: 180px;
-  height: 50px;
-  border-radius: 10px;
-  margin-top: 30px;
-  font-weight: 700;
-  font-size: 14px;
-  letter-spacing: 1.15px;
-  background-color: $red;
-  color: $white;
-  box-shadow: 8px 8px 16px $neu-2, -8px -8px 16px $white;
-  border: none;
-  outline: none;
-  cursor: pointer;
-  transition: 0.25s;
-  font-family: "Tenada", sans-serif;
-
-  &:hover {
-    transform: scale(0.97);
-    box-shadow: 6px 6px 10px $neu-2, -6px -6px 10px $white;
-  }
-
-  &:active {
-    transform: scale(0.95);
-    box-shadow: 4px 4px 8px $neu-2, -4px -4px 8px $white;
-  }
-}
-
-/* Position containers */
 .a-container {
   z-index: 100;
   left: calc(100% - 600px);
@@ -314,7 +193,117 @@ body {
   z-index: 0;
 }
 
-/* Switch section styling */
+/* form elements */
+.form {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.form__icons {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.form__icon {
+  width: 40px;
+  height: 40px;
+  margin: 0 10px;
+  opacity: 0.5;
+  transition: 0.15s;
+}
+.form__icon:hover {
+  opacity: 1;
+  cursor: pointer;
+}
+
+.form__span {
+  margin: 15px 0;
+  font-size: 12px;
+  color: #a0a5a8;
+}
+
+.form__input {
+  width: 350px;
+  height: 40px;
+  margin: 8px 0;
+  padding-left: 25px;
+  font-size: 13px;
+  letter-spacing: 0.15px;
+  border: none;
+  outline: none;
+  background-color: #ecf0f3;
+  transition: 0.25s ease;
+  border-radius: 8px;
+  box-shadow: inset 2px 2px 4px #d1d9e6, inset -2px -2px 4px #f9f9f9;
+  font-family: "Tenada", sans‑serif;
+  color: #333;
+}
+.form__input::placeholder {
+  color: #a0a5a8;
+}
+.form__input:focus {
+  box-shadow: inset 4px 4px 4px #d1d9e6, inset -4px -4px 4px #f9f9f9;
+}
+
+.form__link {
+  margin: 15px 0 20px;
+  color: #333;
+  font-size: 12px;
+  text-decoration: none;
+  line-height: 2;
+}
+
+/* titles & descriptions */
+.title {
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 3;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.description {
+  font-size: 14px;
+  letter-spacing: 0.25px;
+  text-align: center;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+/* buttons */
+.button {
+  width: 180px;
+  height: 50px;
+  border-radius: 10px;
+  margin-top: 30px;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 1.15px;
+  background-color: #c2372f;
+  color: #f9f9f9;
+  box-shadow: 8px 8px 16px #d1d9e6, -8px -8px 16px #f9f9f9;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  transition: 0.25s;
+  font-family: "Tenada", sans‑serif;
+}
+.button:hover {
+  transform: scale(0.97);
+  box-shadow: 6px 6px 10px #d1d9e6, -6px -6px 10px #f9f9f9;
+}
+.button:active {
+  transform: scale(0.95);
+  box-shadow: 4px 4px 8px #d1d9e6, -4px -4px 8px #f9f9f9;
+}
+
+/* switch panel */
 .switch {
   display: flex;
   justify-content: center;
@@ -326,84 +315,74 @@ body {
   width: 400px;
   padding: 50px;
   z-index: 200;
-  transition: $transition;
-  background-color: $neu-1;
+  transition: 1.25s;
+  background-color: #ecf0f3;
   overflow: hidden;
-  box-shadow: 4px 4px 10px $neu-2, -4px -4px 10px $white;
-
-  &__circle {
-    position: absolute;
-    width: 500px;
-    height: 500px;
-    border-radius: 50%;
-    background-color: $neu-1;
-    box-shadow: inset 8px 8px 12px $neu-2, inset -8px -8px 12px $white;
-    bottom: -60%;
-    left: -60%;
-    transition: $transition;
-
-    &--t {
-      top: -30%;
-      left: 60%;
-      width: 300px;
-      height: 300px;
-    }
-  }
-
-  &__container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    position: absolute;
-    width: 400px;
-    padding: 50px 55px;
-    transition: $transition;
-  }
-
-  &__button {
-    cursor: pointer;
-
-    &:hover {
-      box-shadow: 6px 6px 10px $neu-2, -6px -6px 10px $white;
-      transform: scale(0.985);
-      transition: 0.25s;
-    }
-
-    &:active,
-    &:focus {
-      box-shadow: 2px 2px 6px $neu-2, -2px -2px 6px $white;
-      transform: scale(0.97);
-      transition: 0.25s;
-    }
-  }
+  box-shadow: 4px 4px 10px #d1d9e6, -4px -4px 10px #f9f9f9;
 }
 
-/* Animation classes */
+.switch__circle {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background-color: #ecf0f3;
+  box-shadow: inset 8px 8px 12px #d1d9e6, inset -8px -8px 12px #f9f9f9;
+  bottom: -60%;
+  left: -60%;
+  transition: 1.25s;
+}
+.switch__circle--t {
+  top: -30%;
+  left: 60%;
+  width: 300px;
+  height: 300px;
+}
+
+.switch__container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  position: absolute;
+  width: 400px;
+  padding: 50px 55px;
+  transition: 1.25s;
+}
+
+.switch__button:hover {
+  box-shadow: 6px 6px 10px #d1d9e6, -6px -6px 10px #f9f9f9;
+  transform: scale(0.985);
+  transition: 0.25s;
+}
+.switch__button:active,
+.switch__button:focus {
+  box-shadow: 2px 2px 6px #d1d9e6, -2px -2px 6px #f9f9f9;
+  transform: scale(0.97);
+  transition: 0.25s;
+}
+
+/* state classes */
 .is-txr {
   left: calc(100% - 400px);
-  transition: $transition;
+  transition: 1.25s;
 }
-
 .is-txl {
   left: 0;
-  transition: $transition;
+  transition: 1.25s;
 }
-
 .is-z200 {
   z-index: 200;
-  transition: $transition;
+  transition: 1.25s;
 }
-
 .is-hidden {
   visibility: hidden;
   opacity: 0;
   position: absolute;
-  transition: $transition;
+  transition: 1.25s;
 }
-
 .is-gx {
-  animation: is-gx $transition;
+  animation: is-gx 1.25s;
 }
 
 @keyframes is-gx {
