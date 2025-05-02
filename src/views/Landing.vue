@@ -8,7 +8,7 @@
         <p>
           {{ $t("landing1.SubTitle") }}
         </p>
-        <button class="btn btn-primary">
+        <button class="btn btn-primary" @click="goList">
           {{ $t("landing1.Button") }}
         </button>
         <div class="info-cards">
@@ -165,6 +165,10 @@ const router = useRouter();
 
 function goJoin() {
   router.push("/Join");
+}
+
+function goList() {
+  router.push("/List");
 }
 </script>
 
