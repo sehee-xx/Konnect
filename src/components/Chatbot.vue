@@ -62,8 +62,8 @@ function sendMessage() {
   overflow: hidden;
 }
 .illustration-img {
-  width: 100%;
-  height: auto;
+  width: 300px;
+  height: 300px;
   object-fit: contain;
   display: block;
 }
@@ -77,7 +77,6 @@ function sendMessage() {
 .chatbot-body {
   flex: 1;
   padding: 16px;
-  background: #fafafa;
   overflow-y: auto;
 }
 .message {
