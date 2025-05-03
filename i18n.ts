@@ -4,9 +4,9 @@ const messages = {
   en: {
     landing1: {
       Title: "KONNECT:\nKorea and Travelers Meet",
+      Button: "Join & Discover",
       SubTitle:
         "Discover Korea’s hidden gems, cozy retreats, and authentic local life",
-      Button: "Start Your Journey",
       Card1Title: "Top\nAttractions",
       Card1Content1: "Discover Korea’s must-see landmarks",
       Card2Title: "Cozy\nStays",
@@ -23,7 +23,7 @@ const messages = {
       Title: "Top Picks for Destinations",
       SubTitle:
         "Explore Seoul’s skyline, Jeju’s shores, Busan’s coast, Yeosu’s islands,\nand Jeonju’s heritage—all at a glance",
-      Button: "Join & Discover",
+      Button: "Start Your Journey",
     },
     landing3: {
       Title: "KONNECT:\nYour Gateway to Korea",
