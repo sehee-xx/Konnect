@@ -354,6 +354,8 @@ const destinations = ref([
   position: relative;
   min-height: 100vh;
   overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .content {
@@ -380,7 +382,7 @@ const destinations = ref([
 }
 
 .category-card {
-  padding: 24px;
+  padding: 12px;
   border-radius: 10px;
   text-align: center;
   display: flex;
