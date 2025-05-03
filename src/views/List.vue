@@ -370,7 +370,7 @@ const destinations = ref([
 }
 
 .section-title {
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 600;
   margin-bottom: 16px;
 }
