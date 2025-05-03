@@ -2,7 +2,7 @@
   <div class="chatbot-container">
     <header class="chatbot-header">
       <img :src="chatbotImage" alt="Chatbot" class="chatbot-avatar" />
-      <h3 class="chatbot-title">Konnect AI</h3>
+      <h3 class="chatbot-title">KONNECT AI</h3>
     </header>
     <div class="chatbot-body">
       <div
