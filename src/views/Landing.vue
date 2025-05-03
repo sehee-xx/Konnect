@@ -8,7 +8,7 @@
         <p>
           {{ $t("landing1.SubTitle") }}
         </p>
-        <button class="btn btn-primary" @click="goList">
+        <button class="btn btn-primary" @click="goJoin">
           {{ $t("landing1.Button") }}
         </button>
         <div class="info-cards">
@@ -61,7 +61,7 @@
         <p>
           {{ $t("landing2.SubTitle") }}
         </p>
-        <button class="btn btn-outline" @click="goJoin">
+        <button class="btn btn-outline" @click="goList">
           {{ $t("landing2.Button") }}
         </button>
       </div>
@@ -179,6 +179,8 @@ function goList() {
   height: 100vh;
   overflow-y: scroll;
   scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .snap-page {
