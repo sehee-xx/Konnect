@@ -1,30 +1,30 @@
 <template>
   <div class="chatbot-container">
-    <!-- Illustration banner for better visibility -->
-    <div class="illustration-container">
-      <img
-        :src="chatbotImage"
-        alt="Chat Illustration"
-        class="illustration-img"
-      />
-    </div>
+    <header class="chatbot-header">
+      <img :src="chatbotImage" alt="Chatbot" class="chatbot-avatar" />
+      <h3 class="chatbot-title">Konnect AI</h3>
+    </header>
     <div class="chatbot-body">
       <div
         v-for="(msg, idx) in messages"
         :key="idx"
         :class="['message', msg.from]"
       >
-        <span>{{ msg.text }}</span>
+        <p>{{ msg.text }}</p>
       </div>
     </div>
-    <div class="chatbot-input-wrapper">
+    <footer class="chatbot-input">
       <input
         v-model="userInput"
         @keyup.enter="sendMessage"
-        placeholder="Type your message..."
+        placeholder="Type a message..."
       />
-      <button @click="sendMessage">➤</button>
-    </div>
+      <button @click="sendMessage">
+        <svg viewBox="0 0 24 24">
+          <path fill="#fff" d="M2,21L23,12L2,3V10L17,12L2,14V21Z" />
+        </svg>
+      </button>
+    </footer>
   </div>
 </template>
 
@@ -34,84 +34,127 @@ import chatbotImage from "../assets/chatbot.png";
 
 const userInput = ref("");
 const messages = ref([
-  { from: "bot", text: "Hello! How can I help you plan your trip?" },
+  {
+    from: "bot",
+    text: "Hello! How can I help you plan your trip?",
+    time: new Date().toLocaleTimeString(),
+  },
 ]);
 
 function sendMessage() {
-  if (!userInput.value) return;
-  messages.value.push({ from: "user", text: userInput.value });
+  if (!userInput.value.trim()) return;
+  messages.value.push({
+    from: "user",
+    text: userInput.value,
+    time: new Date().toLocaleTimeString(),
+  });
+  const input = userInput.value;
+  userInput.value = "";
   setTimeout(() => {
     messages.value.push({
       from: "bot",
-      text: "Sure! Here are some recommendations.",
+      text: `You said: "${input}". Here are some tips...`,
+      time: new Date().toLocaleTimeString(),
     });
-  }, 500);
-  userInput.value = "";
+  }, 600);
 }
 </script>
 
 <style scoped>
 .chatbot-container {
-  width: 340px;
-  max-height: 600px;
+  width: 320px;
+  max-height: 500px;
   display: flex;
   flex-direction: column;
   background: #fff;
-  border-radius: 20px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-}
-.illustration-img {
-  width: 300px;
-  height: 300px;
-  object-fit: contain;
-  display: block;
+  font-family: "Tenada", sans-serif;
 }
 .chatbot-header {
+  display: flex;
+  align-items: center;
   background: #c2372f;
+  padding: 12px;
+}
+.chatbot-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
+  background-color: #fff;
+}
+.chatbot-title {
   color: #fff;
-  padding: 10px 16px;
-  font-size: 18px;
-  font-weight: bold;
+  font-size: 16px;
+  margin: 0;
 }
 .chatbot-body {
   flex: 1;
-  padding: 16px;
+  padding: 12px;
+  background: #f5f5f5;
   overflow-y: auto;
 }
 .message {
+  position: relative;
   max-width: 75%;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   padding: 10px 14px;
-  border-radius: 16px;
+  border-radius: 12px;
   line-height: 1.4;
 }
+.message p {
+  margin: 0;
+}
+.message time {
+  position: absolute;
+  bottom: -20px;
+  font-size: 10px;
+  color: #999;
+}
 .message.bot {
-  background: #f0f0f0;
+  background: #fff;
   align-self: flex-start;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 .message.user {
   background: #c2372f;
   color: #fff;
   align-self: flex-end;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
-.chatbot-input-wrapper {
+.chatbot-input {
   display: flex;
-  border-top: 1px solid #eee;
+  padding: 8px;
+  background: #f5f5f5;
 }
-.chatbot-input-wrapper input {
+.chatbot-input input {
   flex: 1;
   border: none;
-  padding: 14px;
-  outline: none;
+  border-radius: 8px;
+  padding: 8px;
   font-size: 14px;
+  margin-right: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-family: "Tenada", sans-serif;
 }
-.chatbot-input-wrapper button {
-  border: none;
+.chatbot-input input:focus {
+  outline: 1px solid #c2372f;
+}
+.chatbot-input button {
   background: #c2372f;
-  color: #fff;
-  padding: 0 18px;
+  border: none;
+  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  font-size: 20px;
+}
+.chatbot-input button svg {
+  width: 20px;
+  height: 20px;
 }
 </style>
