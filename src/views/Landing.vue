@@ -407,7 +407,7 @@ function goList() {
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-family: "Tenada", sans-serif;
+  font-family: "Freesentation-9Black", sans-serif;
   font-size: 0.8rem;
 }
 .btn-primary {

@@ -70,7 +70,7 @@ function sendMessage() {
   border-radius: 16px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   overflow: hidden;
-  font-family: "Tenada", sans-serif;
+  font-family: "Freesentation-9Black", sans-serif;
 }
 .chatbot-header {
   display: flex;
@@ -137,7 +137,7 @@ function sendMessage() {
   font-size: 14px;
   margin-right: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  font-family: "Tenada", sans-serif;
+  font-family: "Freesentation-9Black", sans-serif;
 }
 .chatbot-input input:focus {
   outline: 1px solid #c2372f;
