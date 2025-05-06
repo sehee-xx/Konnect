@@ -1,10 +1,10 @@
 <template>
+  <Header ref="headerRef"></Header>
   <div class="listing-page">
     <!-- Chatbot widget always present -->
     <div class="chatbot-widget">
       <Chatbot />
     </div>
-
     <div class="content">
       <!-- Section 1: Top 4 Most Loved Plans -->
       <section class="section">
@@ -56,6 +56,7 @@
 import { ref } from "vue";
 import Chatbot from "../components/Chatbot.vue";
 import TravelCard from "../components/TravelCard.vue";
+import Header from "../components/Header.vue";
 
 // 이미지
 import plan1Img from "../assets/plan1.png";
@@ -356,6 +357,7 @@ const destinations = ref([
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  padding-top: 65px;
 }
 
 .content {
