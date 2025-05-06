@@ -4,10 +4,10 @@
 @tailwind utilities;
 
 @font-face {
-  font-family: "Tenada";
-  src: url("https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2210-2@1.0/Tenada.woff2")
+  font-family: "Freesentation-9Black";
+  src: url("https://fastly.jsdelivr.net/gh/projectnoonnu/2404@1.0/Freesentation-9Black.woff2")
     format("woff2");
-  font-weight: normal;
+  font-weight: 900;
   font-style: normal;
 }
 
@@ -20,7 +20,7 @@ body,
   margin: 0 auto;
   overflow: hidden;
   background-color: #f7f8f9;
-  font-family: "Tenada", sans-serif;
+  font-family: "Freesentation-9Black", sans-serif;
   display: flex;
   flex-direction: column;
   justify-content: center;
