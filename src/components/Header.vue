@@ -24,7 +24,7 @@
           <img src="../assets/avatar.png" alt="Profile" />
         </button>
         <ul v-if="showProfileMenu" class="profile-menu">
-          <li @click="goLogin">Sign In</li>
+          <li @click="goJoin">Sign In</li>
           <li @click="goHome">Home</li>
           <li v-if="isLoggedIn" @click="goProfile">My Profile</li>
           <li v-if="isLoggedIn" @click="logout">Logout</li>
@@ -83,8 +83,8 @@ onMounted(() => {
 function goHome() {
   router.push("/");
 }
-function goLogin() {
-  router.push("/login");
+function goJoin() {
+  router.push("/Join");
 }
 function goProfile() {
   router.push("/profile");
