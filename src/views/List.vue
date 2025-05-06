@@ -129,10 +129,10 @@ const topLovedPlans = ref([
 ]);
 
 const categories = ref([
-  { id: "rest", name: "Rest" },
-  { id: "value", name: "Value" },
-  { id: "activity", name: "Activity" },
-  { id: "culture", name: "Culture" },
+  { id: "attractions", name: "Attractions" },
+  { id: "stays", name: "Stays" },
+  { id: "restaurants", name: "Restaurants" },
+  { id: "shopping", name: "Shopping" },
 ]);
 
 const destinations = ref([
