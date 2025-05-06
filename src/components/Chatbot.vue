@@ -68,7 +68,7 @@ function sendMessage() {
   flex-direction: column;
   background: #fff;
   border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   overflow: hidden;
   font-family: "Tenada", sans-serif;
 }
