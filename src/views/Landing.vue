@@ -95,11 +95,11 @@
 import { ref, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import landing1Person from "../assets/person1.png";
-import card1 from "../assets/seoul.png";
-import card2 from "../assets/busan.png";
-import card3 from "../assets/jeju.png";
-import card4 from "../assets/yeosu.png";
-import card5 from "../assets/jeonju.png";
+import card1 from "../assets/cardmotion/seoul.png";
+import card2 from "../assets/cardmotion/busan.png";
+import card3 from "../assets/cardmotion/jeju.png";
+import card4 from "../assets/cardmotion/yeosu.png";
+import card5 from "../assets/cardmotion/jeonju.png";
 
 const page2Items = [
   { img: card1, labelKey: "Seoul", color: "#46337F" },
