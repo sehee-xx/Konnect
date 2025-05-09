@@ -1,8 +1,3 @@
-/* postcss */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 @font-face {
   font-family: "Freesentation-9Black";
   src: url("https://fastly.jsdelivr.net/gh/projectnoonnu/2404@1.0/Freesentation-9Black.woff2")
@@ -11,7 +6,6 @@
   font-style: normal;
 }
 
-/* 전역 full‑screen 세팅 */
 html,
 body,
 #app {
