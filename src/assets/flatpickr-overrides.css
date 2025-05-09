@@ -1,39 +1,7 @@
-/* src/assets/flatpickr-overrides.css */
-
-/* Fix weekday headers alignment - targeting exactly what we see in the DOM */
-.flatpickr-weekdaycontainer {
-  display: flex !important;
-  width: 100% !important;
-}
-
-.flatpickr-weekdays {
-  display: flex !important;
-  width: 100% !important;
-}
-
-/* Make sure each day header takes equal space */
-.flatpickr-weekday {
-  flex: 1 !important;
-  float: none !important;
-  text-align: center !important;
-  font-size: 12px !important;
-  width: auto !important; /* Prevent fixed width issues */
-}
-
-/* Today highlight styling */
-.flatpickr-day.today {
-  background-color: #c2372f !important;
-  color: #fff !important;
-  border-radius: 50% !important;
-}
-
-/* Improve overall calendar styling */
 .flatpickr-calendar {
-  border-radius: 8px !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  font-family: sans-serif !important;
 }
 
-/* Selected date styling */
 .flatpickr-day.selected,
 .flatpickr-day.startRange,
 .flatpickr-day.endRange {
@@ -41,12 +9,10 @@
   border-color: #c2372f !important;
 }
 
-/* Hover effect */
 .flatpickr-day:hover {
   background: #f0f0f0 !important;
 }
 
-/* Calendar arrows */
 .flatpickr-months .flatpickr-prev-month:hover svg,
 .flatpickr-months .flatpickr-next-month:hover svg {
   fill: #c2372f !important;

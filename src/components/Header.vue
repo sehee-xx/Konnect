@@ -63,10 +63,13 @@ onMounted(() => {
     altInput: true,
     altFormat: "m/d/Y",
     dateFormat: "Y-m-d",
-    // onReady: (inst) => {
-    //   inst.altInput.placeholder =
-    //     inst.input === checkinRef.value ? "Check‑in" : "Check‑out";
-    // },
+    onReady: (_selectedDates, _dateStr, instance) => {
+      instance.calendarContainer
+        .querySelectorAll(".flatpickr-weekday")
+        .forEach((el) => {
+          el.textContent = el.textContent.trim();
+        });
+    },
     onChange: (dates, dateStr, inst) => {
       if (inst.input === checkinRef.value) {
         search.value.checkin = dateStr;
@@ -152,7 +155,7 @@ function onSearch() {
   cursor: pointer;
   border: none;
 }
-::v-deep .form-control.input {
+:deep(.form-control.input) {
   background: #f7f8f9;
   border: none;
   padding: 8px 12px;
@@ -170,12 +173,6 @@ function onSearch() {
   border-bottom-right-radius: 20px;
   cursor: pointer;
   font-size: 14px;
-  font-family: "Freesentation-9Black", sans-serif;
-}
-::v-deep .flatpickr-day.today {
-  background-color: #c2372f !important;
-  color: #fff !important;
-  border-radius: 50% !important;
 }
 .controls {
   position: relative;
