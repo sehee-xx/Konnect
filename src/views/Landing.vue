@@ -173,6 +173,14 @@ function goList() {
 </script>
 
 <style scoped>
+@font-face {
+  font-family: "Tenada";
+  src: url("https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2210-2@1.0/Tenada.woff2")
+    format("woff2");
+  font-weight: normal;
+  font-style: normal;
+}
+
 .snap-container {
   flex: 1;
   width: 100vw;
@@ -181,6 +189,7 @@ function goList() {
   scroll-snap-type: y mandatory;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  font-family: "Tenada";
 }
 
 .snap-page {
