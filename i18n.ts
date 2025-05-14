@@ -6,7 +6,7 @@ const messages = {
       Title: "KONNECT:\nKorea and Travelers Meet",
       Button: "Join & Discover",
       SubTitle:
-        "Discover Korea’s hidden gems, cozy retreats, and authentic local life",
+        "Discover Korea’s hidden gems, cozy retreats,\nand authentic local life",
       Card1Title: "Top\nAttractions",
       Card1Content1: "Discover Korea’s must-see landmarks",
       Card2Title: "Cozy\nStays",
@@ -48,9 +48,9 @@ const messages = {
       signIn: "SIGN IN",
       welcomeBack: "Welcome Back !",
       keepConnected:
-        "To keep connected with us please login with your personal info",
+        "To keep connected with us\nplease login with your personal info",
       helloFriend: "Hello Friend!",
-      enterDetails: "Enter your personal details and start journey with us",
+      enterDetails: "Enter your personal details\nand start journey with us",
     },
   },
   ko: {
@@ -59,11 +59,11 @@ const messages = {
       SubTitle: "숨겨진 명소, 아늑한 숙소, 그리고 진짜 현지 문화를 만나세요",
       Button: "지금 둘러보기",
       Card1Title: "핵심\n명소",
-      Card1Content1: "놓치지 말아야 할 한국 대표 관광지",
+      Card1Content1: "놓치지 말아야 할 한국 대표\n관광지",
       Card2Title: "아늑한\n숙소",
       Card2Content1: "감성 가득 호텔·게스트하우스 추천",
       Card3Title: "지역별\n행사",
-      Card3Content1: "축제·마켓 등 다채로운\n현장 체험",
+      Card3Content1: "축제·마켓 등\n다채로운\n현장 체험",
     },
     landing2: {
       Seoul: "서울",
@@ -106,8 +106,8 @@ const messages = {
 };
 
 export const i18n = createI18n({
-  legacy: false, // Composition API 모드
-  locale: "en", // 기본 언어
+  legacy: false,
+  locale: "en",
   fallbackLocale: "en",
   messages,
 });
