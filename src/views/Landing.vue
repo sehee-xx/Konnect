@@ -208,6 +208,7 @@ function goList() {
   background: url("../assets/landing1-bg.png");
   background-position: center center;
   background-size: cover;
+  width: 100%;
 }
 .page1-left {
   width: 50%;
@@ -221,12 +222,14 @@ function goList() {
   line-height: 1.2;
   margin-bottom: 1rem;
   color: #c2372f;
+  white-space: pre-line;
 }
 .page1-left p {
   margin-bottom: 2rem;
   line-height: 1.2;
   color: #333;
   opacity: 0.9;
+  white-space: pre-line;
 }
 .info-cards {
   display: flex;
@@ -247,9 +250,11 @@ function goList() {
   font-size: 1.5rem;
   display: block;
   margin-bottom: 0.5rem;
+  white-space: pre-line;
 }
 .info-card h4 {
   color: #c2372f;
+  white-space: pre-line;
 }
 .page1-right {
   width: 100%;
@@ -356,11 +361,13 @@ function goList() {
   font-size: 3rem;
   margin-bottom: 1rem;
   color: #482675;
+  white-space: pre-line;
 }
 .page2-right p {
   margin-bottom: 1.5rem;
   line-height: 1.5;
   color: #555;
+  white-space: pre-line;
 }
 
 /* Page3 */
@@ -382,14 +389,17 @@ function goList() {
   z-index: 1;
   text-align: center;
   max-width: 700px;
+  white-space: pre-line;
 }
 .page3-content h2 {
   font-size: 2.8rem;
   margin-bottom: 0.5rem;
+  white-space: pre-line;
 }
 .page3-content p {
   margin-bottom: 2rem;
   opacity: 0.8;
+  white-space: pre-line;
 }
 .stats {
   display: flex;
@@ -405,9 +415,11 @@ function goList() {
   font-size: 2rem;
   color: #fca311;
   padding-bottom: 10px;
+  white-space: pre-line;
 }
 .stat span {
   opacity: 0.8;
+  white-space: pre-line;
 }
 
 /* buttons */
