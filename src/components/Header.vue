@@ -1,12 +1,9 @@
 <template>
   <header class="site-header">
     <div class="header-inner">
-      <!-- 좌측 로고 -->
       <div class="logo" @click="goHome">
         <img src="../assets/logo.png" alt="Logo" />
       </div>
-
-      <!-- 검색 바 -->
       <div class="search-bar">
         <input
           type="text"
@@ -17,8 +14,6 @@
         <input ref="checkoutRef" type="text" placeholder="End Date" readonly />
         <button class="btn-search" @click="onSearch">Search</button>
       </div>
-
-      <!-- 우측 프로필 -->
       <div class="controls">
         <button class="btn-avatar" @click="toggleProfileMenu">
           <img src="../assets/avatar.png" alt="Profile" />
@@ -44,7 +39,6 @@ import "../assets/flatpickr-overrides.css";
 
 const router = useRouter();
 
-// 로그인 상태 (실제 앱에선 Vuex/Pinia나 props 로 바인딩)
 const isLoggedIn = ref(false);
 const showProfileMenu = ref(false);
 
@@ -54,7 +48,6 @@ const search = ref({
   checkout: "",
 });
 
-// refs for flatpickr
 const checkinRef = ref(null);
 const checkoutRef = ref(null);
 
@@ -130,7 +123,7 @@ function onSearch() {
   gap: 24px;
 }
 .logo img {
-  height: 32px;
+  height: 38px;
   cursor: pointer;
 }
 .search-bar {
@@ -190,7 +183,7 @@ function onSearch() {
   cursor: pointer;
 }
 .btn-avatar img {
-  height: 32px;
+  height: 38px;
   border-radius: 50%;
 }
 .profile-menu {
@@ -199,16 +192,28 @@ function onSearch() {
   right: 0;
   background: #f7f8f9;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   list-style: none;
-  padding: 8px 0;
-  width: 140px;
+  padding: 0px 0px;
+  width: 100px;
 }
 .profile-menu li {
+  font-size: 14px;
   padding: 8px 16px;
   cursor: pointer;
 }
+
+.profile-menu li:first-child {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.profile-menu li:last-child {
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
 .profile-menu li:hover {
-  background: #f5f5f5;
+  background: #ddd;
 }
 </style>
