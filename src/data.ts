@@ -156,19 +156,6 @@ import jeonju26 from "./assets/cardImg/jeonju26.png";
 import jeonju27 from "./assets/cardImg/jeonju27.png";
 import jeonju28 from "./assets/cardImg/jeonju28.png";
 
-// --- helper: 이미지 배열 → plans array ---
-function makePlans(regionId: String, regionName: String, images: any) {
-  return images.map((img: any, i: number) => ({
-    id: `${regionId}${i + 1}`,
-    image: img,
-    location: regionName,
-    rating: +(4.5 + (i % 5) * 0.1).toFixed(1), // 예시 평점
-    distance: 5 + i, // 예시 거리
-    dateRange: `Jun ${1 + 5 * i}–${5 + 5 * i}`, // 예시 날짜
-    description: `${regionName} plan #${i + 1}`, // 예시 설명
-  }));
-}
-
 // 이미지 배열 모아두기
 const seoulImages = [
   seoul1,
@@ -321,43 +308,68 @@ const jeonjuImages = [
   jeonju28,
 ];
 
+const TAG_POOL = [
+  "Sightseeing",
+  "Food",
+  "Culture",
+  "Adventure",
+  "Relax",
+  "History",
+  "Nature",
+  "Shopping",
+  "Nightlife",
+  "Photography",
+];
+
+function makePlans(regionId: String, regionName: String, images: any) {
+  return images.map((img: any, i: number) => {
+    // 슬라이딩 윈도우로 태그 3개 추출
+    const start = i % (TAG_POOL.length - 2);
+    const tags = TAG_POOL.slice(start, start + 3);
+    return {
+      id: `${regionId}${i + 1}`,
+      image: img,
+      title: regionName,
+      likes: Math.floor(50 + Math.random() * 150),
+      dateRange: `Jun ${1 + 3 * i}–${3 + 3 * i}`,
+      tags,
+    };
+  });
+}
+
 // (1) 가장 사랑받는 상위 4개 플랜
 export const topLovedPlans = [
   {
     id: 1,
     image: plan1Img,
     title: "Seoul Mood Tour",
-    location: "Seoul",
     likes: 120,
-    rating: 4.9,
-    price: "₩150,000",
+    dateRange: "Jun 1–4",
+    tags: ["Culture", "Sightseeing", "Food"],
   },
   {
     id: 2,
     image: plan2Img,
     title: "Jeju Nature Healing",
-    location: "Jeju",
     likes: 98,
-    rating: 4.8,
-    price: "₩180,000",
+    dateRange: "Jun 5–8",
+    tags: ["Nature", "Relax", "Adventure"],
   },
   {
     id: 3,
     image: plan3Img,
     title: "Busan Beach Activities",
-    location: "Busan",
     likes: 85,
-    rating: 4.7,
-    price: "₩130,000",
+    dateRange: "Jun 9–12",
+    tags: ["Adventure", "Sightseeing", "Photography"],
   },
   {
     id: 4,
     image: plan4Img,
     title: "Jeonju Hanok Experience",
-    location: "Jeonju",
     likes: 76,
-    rating: 4.6,
-    price: "₩110,000",
+    dateRange: "Jun 13–16",
+    tags: ["History", "Culture", "Food"],
   },
 ];
 
