@@ -1,10 +1,6 @@
 <template>
-  <Header ref="headerRef"></Header>
+  <Header ref="headerRef" />
   <div class="listing-page">
-    <!-- Chatbot widget always present -->
-    <!-- <div class="chatbot-widget">
-      <Chatbot />
-    </div> -->
     <div class="container">
       <!-- Section 1: Top 4 Most Loved Plans -->
       <section class="section">
@@ -15,16 +11,6 @@
             :key="plan.id"
             :plan="plan"
           />
-        </div>
-      </section>
-
-      <!-- Section 2: Curation by Category -->
-      <section class="section">
-        <h2 class="section-title">Curated Recommendations</h2>
-        <div class="cards-grid">
-          <div v-for="cat in categories" :key="cat.id" class="category-card">
-            <h3 class="category-name">{{ cat.name }}</h3>
-          </div>
         </div>
       </section>
 
@@ -45,7 +31,7 @@
             </div>
             <div class="cards-grid">
               <TravelCard
-                v-for="plan in dest.plans.slice(0, 4)"
+                v-for="plan in dest.plans"
                 :key="plan.id"
                 :plan="plan"
               />
@@ -58,15 +44,33 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import Chatbot from "../components/Chatbot.vue";
 import TravelCard from "../components/TravelCard.vue";
 import Header from "../components/Header.vue";
 
-import { topLovedPlans, categories, destinations } from "../data";
+import {
+  topLovedPlans as allTopLoved,
+  categories,
+  destinations as allDestinations,
+} from "../data";
 
 const router = useRouter();
+
+const topLovedPlans = computed(() =>
+  [...allTopLoved].sort((a, b) => b.likes - a.likes).slice(0, 4)
+);
+
+const destinations = computed(() =>
+  allDestinations.map((dest) => ({
+    ...dest,
+    plans: dest.plans
+      .slice()
+      .sort((a, b) => b.likes - a.likes)
+      .slice(0, 4),
+  }))
+);
 
 function goToDestination(id) {
   router.push({
@@ -84,7 +88,7 @@ function goToDestination(id) {
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  padding-top: 65px;
+  padding-top: 70px;
 }
 
 .section-title {
