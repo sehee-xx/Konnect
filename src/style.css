@@ -28,4 +28,5 @@ body,
   margin-right: auto;
   box-sizing: border-box;
   padding: 0px --gutter;
+  margin-bottom: 30px;
 }
