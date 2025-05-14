@@ -26,6 +26,7 @@
         <ul v-if="showProfileMenu" class="profile-menu">
           <li @click="goJoin">Sign In</li>
           <li @click="goHome">Home</li>
+          <li @click="goList">List</li>
           <li v-if="isLoggedIn" @click="goProfile">My Profile</li>
           <li v-if="isLoggedIn" @click="logout">Logout</li>
         </ul>
@@ -88,6 +89,9 @@ function goHome() {
 }
 function goJoin() {
   router.push("/Join");
+}
+function goList() {
+  router.push("/List");
 }
 function goProfile() {
   router.push("/profile");
