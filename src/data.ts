@@ -323,13 +323,12 @@ const TAG_POOL = [
 
 function makePlans(regionId: String, regionName: String, images: any) {
   return images.map((img: any, i: number) => {
-    // 슬라이딩 윈도우로 태그 3개 추출
     const start = i % (TAG_POOL.length - 2);
     const tags = TAG_POOL.slice(start, start + 3);
     return {
       id: `${regionId}${i + 1}`,
       image: img,
-      title: regionName,
+      title: `${regionName} Highlights ${i + 1}`,
       likes: Math.floor(50 + Math.random() * 150),
       dateRange: `Jun ${1 + 3 * i}–${3 + 3 * i}`,
       tags,
