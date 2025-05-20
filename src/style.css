@@ -17,9 +17,18 @@ body,
   width: 100%;
   height: 100%;
   margin: 0;
+  padding: 0;
   box-sizing: border-box;
   background-color: #f7f8f9;
   font-family: "Freesentation-9Black", sans-serif;
+}
+
+.join-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
 }
 
 .container {
@@ -27,6 +36,6 @@ body,
   margin-left: auto;
   margin-right: auto;
   box-sizing: border-box;
-  padding: 0px --gutter;
+  padding: 0px var(--gutter);
   margin-bottom: 30px;
 }
