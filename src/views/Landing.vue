@@ -100,6 +100,7 @@ import card2 from "../assets/cardmotion/busan.png";
 import card3 from "../assets/cardmotion/jeju.png";
 import card4 from "../assets/cardmotion/yeosu.png";
 import card5 from "../assets/cardmotion/jeonju.png";
+import "../style.css";
 
 const page2Items = [
   { img: card1, labelKey: "Seoul", color: "#46337F" },
@@ -427,7 +428,6 @@ function goList() {
   padding: 0.9rem 1.5rem;
   border: none;
   border-radius: 4px;
-  cursor: pointer;
   font-family: "Freesentation-9Black", sans-serif;
   font-size: 0.8rem;
 }
