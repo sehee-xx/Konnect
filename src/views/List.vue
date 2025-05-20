@@ -14,6 +14,21 @@
         </div>
       </section>
 
+      <!-- Section 2: Curation by Category -->
+      <section class="section">
+        <h2 class="section-title">Curated Recommendations</h2>
+        <div class="cards-grid">
+          <div
+            v-for="cat in categoryList"
+            :key="cat.id"
+            class="category-card"
+            @click="goToCategory(cat.id)"
+          >
+            <div class="category-name">{{ cat.name }}</div>
+          </div>
+        </div>
+      </section>
+
       <!-- Section 3: Plans by Destination -->
       <section class="section">
         <h2 class="section-title-no-padding-bottom">
@@ -44,15 +59,13 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { computed } from "vue";
 import { useRouter } from "vue-router";
-import Chatbot from "../components/Chatbot.vue";
 import TravelCard from "../components/TravelCard.vue";
 import Header from "../components/Header.vue";
-
 import {
   topLovedPlans as allTopLoved,
-  categories,
+  categories as allCategories,
   destinations as allDestinations,
 } from "../data";
 
@@ -61,6 +74,8 @@ const router = useRouter();
 const topLovedPlans = computed(() =>
   [...allTopLoved].sort((a, b) => b.likes - a.likes).slice(0, 4)
 );
+
+const categoryList = computed(() => allCategories.slice(0, 4));
 
 const destinations = computed(() =>
   allDestinations.map((dest) => ({
@@ -79,6 +94,14 @@ function goToDestination(id) {
     query: { sort: "popular" },
   });
 }
+
+function goToCategory(id) {
+  router.push({
+    name: "CategoryPlans",
+    params: { categoryId: id },
+    query: { sort: "popular" },
+  });
+}
 </script>
 
 <style scoped>
@@ -86,26 +109,53 @@ function goToDestination(id) {
   position: relative;
   min-height: 100vh;
   overflow-y: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
   padding-top: 70px;
 }
 
 .section-title {
   font-size: 26px;
   font-weight: 600;
+  margin-bottom: 16px;
 }
 
 .section-title-no-padding-bottom {
-  margin-bottom: 0px;
+  margin-bottom: 0;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 24px;
+}
+
+.category-card {
+  cursor: pointer;
+  padding: 20px;
+  border-radius: 10px;
+  background-color: #eee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 85px;
+  transition: background-color 0.3s;
+  margin-bottom: 40px;
+}
+
+.category-card:hover {
+  background-color: #c2372f;
+  color: #fff;
+}
+
+.category-name {
+  font-size: 18px;
+  font-weight: 500;
 }
 
 .destination-header {
   display: flex;
-  flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  margin-bottom: 8px;
 }
 
 .btn-view-all {
@@ -114,50 +164,8 @@ function goToDestination(id) {
   cursor: pointer;
 }
 
-.cards-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
-}
-
-.category-card {
-  padding: 12px;
-  border-radius: 10px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 80px;
-  background-color: #ccc;
-  color: #333;
-  margin-bottom: 30px;
-}
-
-.category-card:hover {
-  background-color: #c2372f;
-  color: #fff;
-}
-
-.category-icon {
-  width: 48px;
-  height: 48px;
-}
-
-.category-name {
-  font-size: 18px;
-  font-weight: 500;
-}
-
 .destination-title {
   font-size: 20px;
   font-weight: 500;
-}
-
-.chatbot-widget {
-  position: fixed;
-  bottom: 16px;
-  right: 16px;
-  z-index: 1000;
 }
 </style>
