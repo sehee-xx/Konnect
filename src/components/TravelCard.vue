@@ -58,7 +58,7 @@ const props = defineProps({ plan: { type: Object, required: true } });
 }
 
 .overlay {
-  border-radius: 20px;
+  border-radius: 16px;
   position: absolute;
   top: 0;
   left: 0;
