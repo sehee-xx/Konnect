@@ -51,7 +51,7 @@ const destination = computed(
 const sortedPlans = computed(() => {
   const arr = [...destination.value.plans];
   return currentSort.value === "popular"
-    ? arr.sort((a, b) => b.rating - a.rating)
+    ? arr.sort((a, b) => b.likes - a.likes)
     : arr.reverse();
 });
 
@@ -79,7 +79,7 @@ watch(
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  padding-top: 65px;
+  padding-top: 70px;
 }
 
 .destination-header {
