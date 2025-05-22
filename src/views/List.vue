@@ -114,7 +114,6 @@ function goToCategory(id) {
 
 .section-title {
   font-size: 26px;
-  font-weight: 600;
   margin-bottom: 16px;
 }
 
@@ -136,7 +135,7 @@ function goToCategory(id) {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 85px;
+  height: 65px;
   transition: background-color 0.3s;
   margin-bottom: 40px;
 }

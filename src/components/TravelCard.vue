@@ -1,5 +1,5 @@
 <template>
-  <div class="travel-card">
+  <div class="travel-card" @click="goDetail">
     <div class="image-wrapper">
       <img :src="plan.image" :alt="plan.title" class="card-image" />
       <div class="overlay">
@@ -30,7 +30,20 @@
 </template>
 
 <script setup>
-const props = defineProps({ plan: { type: Object, required: true } });
+import { useRouter } from "vue-router";
+
+const props = defineProps({
+  plan: { type: Object, required: true },
+});
+
+const router = useRouter();
+
+function goDetail() {
+  router.push({
+    name: "PlanById",
+    params: { planId: props.plan.id },
+  });
+}
 </script>
 
 <style scoped>
@@ -41,6 +54,7 @@ const props = defineProps({ plan: { type: Object, required: true } });
   display: flex;
   flex-direction: column;
   padding-bottom: 12px;
+  cursor: pointer;
 }
 
 .image-wrapper {
@@ -130,8 +144,8 @@ const props = defineProps({ plan: { type: Object, required: true } });
 }
 
 .likes {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
 }
 
 .likes-count {
