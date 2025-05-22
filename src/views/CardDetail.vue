@@ -861,7 +861,7 @@ export default {
   align-items: center;
   margin-bottom: 30px;
   padding-bottom: 20px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid #eee;
 }
 
 .comments-section-header h2 {
