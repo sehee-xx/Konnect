@@ -2,7 +2,7 @@
   font-family: "Freesentation-9Black";
   src: url("https://fastly.jsdelivr.net/gh/projectnoonnu/2404@1.0/Freesentation-9Black.woff2")
     format("woff2");
-  font-weight: 900;
+  font-weight: 400;
   font-style: normal;
 }
 
@@ -20,7 +20,8 @@ body,
   padding: 0;
   box-sizing: border-box;
   background-color: #f7f8f9;
-  font-family: "Freesentation-9Black", sans-serif;
+  /* font-family: "Freesentation-9Black", sans-serif; */
+  font-family: "Pretendard", sans-serif;
 }
 
 .join-wrapper {
