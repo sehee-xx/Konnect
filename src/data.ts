@@ -1,5 +1,5 @@
 // src/data.js
-// ── 1) Top‑loved plans 이미지 import ──
+// ── 1) Top-loved plans 이미지 import ──
 import plan1Img from "./assets/cardImg/plan1.png";
 import plan2Img from "./assets/cardImg/plan2.png";
 import plan3Img from "./assets/cardImg/plan3.png";
@@ -35,7 +35,6 @@ import seoul25 from "./assets/cardImg/seoul25.png";
 import seoul26 from "./assets/cardImg/seoul26.png";
 import seoul27 from "./assets/cardImg/seoul27.png";
 import seoul28 from "./assets/cardImg/seoul28.png";
-
 // Busan
 import busan1 from "./assets/cardImg/busan1.png";
 import busan2 from "./assets/cardImg/busan2.png";
@@ -65,7 +64,6 @@ import busan25 from "./assets/cardImg/busan25.png";
 import busan26 from "./assets/cardImg/busan26.png";
 import busan27 from "./assets/cardImg/busan27.png";
 import busan28 from "./assets/cardImg/busan28.png";
-
 // Yeosu
 import yeosu1 from "./assets/cardImg/yeosu1.png";
 import yeosu2 from "./assets/cardImg/yeosu2.png";
@@ -95,7 +93,6 @@ import yeosu25 from "./assets/cardImg/yeosu25.png";
 import yeosu26 from "./assets/cardImg/yeosu26.png";
 import yeosu27 from "./assets/cardImg/yeosu27.png";
 import yeosu28 from "./assets/cardImg/yeosu28.png";
-
 // Jeju
 import jeju1 from "./assets/cardImg/jeju1.png";
 import jeju2 from "./assets/cardImg/jeju2.png";
@@ -125,7 +122,6 @@ import jeju25 from "./assets/cardImg/jeju25.png";
 import jeju26 from "./assets/cardImg/jeju26.png";
 import jeju27 from "./assets/cardImg/jeju27.png";
 import jeju28 from "./assets/cardImg/jeju28.png";
-
 // Jeonju
 import jeonju1 from "./assets/cardImg/jeonju1.png";
 import jeonju2 from "./assets/cardImg/jeonju2.png";
@@ -156,7 +152,7 @@ import jeonju26 from "./assets/cardImg/jeonju26.png";
 import jeonju27 from "./assets/cardImg/jeonju27.png";
 import jeonju28 from "./assets/cardImg/jeonju28.png";
 
-// 이미지 배열 모아두기
+// 이미지 배열들
 const seoulImages = [
   seoul1,
   seoul2,
@@ -308,7 +304,8 @@ const jeonjuImages = [
   jeonju28,
 ];
 
-const TAG_POOL = [
+// 태그 풀
+export const TAG_POOL = [
   "Sightseeing",
   "Food",
   "Culture",
@@ -321,66 +318,94 @@ const TAG_POOL = [
   "Photography",
 ];
 
-function makePlans(regionId: String, regionName: String, images: any) {
+// 샘플 댓글
+const SAMPLE_COMMENTS = [
+  {
+    id: 1,
+    userId: "user123",
+    username: "Sehee",
+    userAvatar: "https://example.com/avatars/user1.jpg",
+    date: "2025-05-15T14:23:00",
+    content: "이 코스 정말 좋네요!",
+    replies: [
+      {
+        id: 101,
+        userId: "user456",
+        username: "Sei",
+        userAvatar: "https://example.com/avatars/user2.jpg",
+        date: "2025-05-15T15:40:00",
+        content: "바다향기 조개구이 추천!",
+      },
+    ],
+  },
+];
+
+function pickTen(images: any) {
+  const picked = images.slice(0, 10);
+  let idx = 0;
+  while (picked.length < 10) {
+    picked.push(images[idx % images.length]);
+    idx++;
+  }
+  return picked;
+}
+
+// 플랜 생성 함수
+function makePlans(regionId: string, regionName: string, images: any) {
   return images.map((img: any, i: number) => {
-    const start = i % (TAG_POOL.length - 2);
-    const tags = TAG_POOL.slice(start, start + 3);
+    const tags = TAG_POOL.slice(
+      i % (TAG_POOL.length - 2),
+      (i % (TAG_POOL.length - 2)) + 3
+    );
+
     return {
       id: `${regionId}${i + 1}`,
       image: img,
       title: `${regionName} Highlights ${i + 1}`,
-      likes: Math.floor(50 + Math.random() * 150),
-      dateRange: `Jun ${1 + 3 * i}–${3 + 3 * i}`,
+      dateRange: `Jun ${1 + 3 * i}-${3 + 3 * i}`,
       tags,
+      // 항상 10장
+      detailImages: pickTen(images),
+      author: "Sei",
+      days: makeSampleDays(images),
+      comments: [...SAMPLE_COMMENTS],
+      likes: Math.floor(50 + Math.random() * 150),
     };
   });
 }
 
-// (1) 가장 사랑받는 상위 4개 플랜
-export const topLovedPlans = [
-  {
-    id: 1,
-    image: plan1Img,
-    title: "Seoul Mood Tour",
-    likes: 120,
-    dateRange: "Jun 1–4",
-    tags: ["Culture", "Sightseeing", "Food"],
-  },
-  {
-    id: 2,
-    image: plan2Img,
-    title: "Jeju Nature Healing",
-    likes: 98,
-    dateRange: "Jun 5–8",
-    tags: ["Nature", "Relax", "Adventure"],
-  },
-  {
-    id: 3,
-    image: plan3Img,
-    title: "Busan Beach Activities",
-    likes: 85,
-    dateRange: "Jun 9–12",
-    tags: ["Adventure", "Sightseeing", "Photography"],
-  },
-  {
-    id: 4,
-    image: plan4Img,
-    title: "Jeonju Hanok Experience",
-    likes: 76,
-    dateRange: "Jun 13–16",
-    tags: ["History", "Culture", "Food"],
-  },
-];
+// 샘플 날짜별 경로 생성
+function makeSampleDays(images: any) {
+  return images.slice(0, 5).map((_: any, dayIdx: number) => ({
+    date: new Date(2025, 6, 4 + dayIdx).toISOString().slice(0, 10),
+    locations: images
+      .slice(dayIdx, dayIdx + 3)
+      .map((__: any, locIdx: number) => ({
+        name: `샘플 지점 ${locIdx + 1}`,
+        time: `${9 + locIdx}:00`,
+        description: "샘플 설명",
+        coordinates: {
+          lat: 35.15 + 0.01 * dayIdx,
+          lng: 129.12 + 0.01 * locIdx,
+        },
+      })),
+    distances: ["2km", "1.5km"],
+  }));
+}
 
-// (2) 카테고리 목록
+// 최상위 export
+export const topLovedPlans = makePlans("t", "Top", [
+  plan1Img,
+  plan2Img,
+  plan3Img,
+  plan4Img,
+]);
 export const categories = [
   { id: "attractions", name: "Attractions" },
   { id: "stays", name: "Stays" },
   { id: "restaurants", name: "Restaurants" },
   { id: "shopping", name: "Shopping" },
 ];
-
-// (3) 지역별 모든 플랜 — 28개씩
 export const destinations = [
   { id: "seoul", name: "Seoul", plans: makePlans("s", "Seoul", seoulImages) },
   { id: "busan", name: "Busan", plans: makePlans("b", "Busan", busanImages) },
