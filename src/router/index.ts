@@ -16,8 +16,8 @@ const routes = [
     props: true, // regionId 를 props 로 전달
   },
   {
-    path: "/list/:regionId/:planId",
-    name: "PlanDetail",
+    path: "/plan/:planId",
+    name: "PlanById",
     component: CardDetail,
     props: true,
   },
