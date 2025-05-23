@@ -22,6 +22,8 @@ body,
   background-color: #f7f8f9;
   /* font-family: "Freesentation-9Black", sans-serif; */
   font-family: "Pretendard", sans-serif;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .join-wrapper {
