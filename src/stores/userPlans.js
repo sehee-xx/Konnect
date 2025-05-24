@@ -1,38 +1,28 @@
 // src/stores/userPlans.js
+import { defineStore } from "pinia";
+import axios from "axios";
 
-import { reactive } from "vue";
-import jeju1 from "../assets/cardImg/jeju1.png";
-import jeju2 from "../assets/cardImg/jeju2.png";
-import jeju3 from "../assets/cardImg/jeju3.png";
-
-export const userPlans = reactive({
-  plans: [
-    {
-      id: 1,
-      title: "제주도 일주",
-      dateRange: "2025-05-01 ~ 2025-05-05",
-      status: "ongoing", // 진행 중
-      thumbnailUrl: jeju1, // require() 대신 import
+export const useUserPlans = defineStore("userPlans", {
+  state: () => ({
+    plans: [],
+  }),
+  actions: {
+    async loadPlans() {
+      // 서버에서 전체 플랜 목록 불러오기
+      const res = await axios.get("/api/v1/user/diaries");
+      this.plans = res.data;
     },
-    {
-      id: 2,
-      title: "서울 맛집 탐방",
-      dateRange: "2025-05-10 ~ 2025-05-12",
-      status: "ongoing",
-      thumbnailUrl: jeju2,
+    async fetchDraft(id) {
+      // 단일 draft 불러올 때
+      const res = await axios.get(`/api/v1/user/diaries/draft/${id}`);
+      return res.data;
     },
-    {
-      id: 3,
-      title: "부산 해운대 여행",
-      dateRange: "2025-04-20 ~ 2025-04-22",
-      status: "completed", // 완료
-      thumbnailUrl: jeju3,
-    },
-  ],
-
-  // 실제 API 연동 시 onMounted()에서 호출하세요.
-  async fetch() {
-    // const { data } = await axios.get('/api/user/plans')
-    // this.plans = data
+    // ... 필요하다면 다른 액션들도 추가
   },
 });
+
+// **named export** 로도 쓸 수 있게 (선택)
+export const loadPlans = async () => {
+  const store = useUserPlans();
+  await store.loadPlans();
+};
