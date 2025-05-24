@@ -7,32 +7,37 @@
         class="panel-container b-container"
         :class="[{ 'is-txl': toggled }, { 'is-z200': toggled }]"
       >
-        <form @submit.prevent class="form" id="b-form">
+        <form @submit.prevent="handleLogin" class="form" id="b-form">
           <h2 class="title">{{ t("join.signInTitle") }}</h2>
           <div class="form__icons">
             <img
               class="form__icon"
               src="../assets/login-google.png"
               alt="Google"
+              @click="socialLogin('google')"
             />
             <img
               class="form__icon"
               src="../assets/login-kakao.png"
               alt="Kakao"
+              @click="socialLogin('kakao')"
             />
             <img
               class="form__icon"
               src="../assets/login-naver.png"
               alt="Naver"
+              @click="socialLogin('naver')"
             />
           </div>
           <span class="form__span">{{ t("join.orUseEmailAccount") }}</span>
           <input
+            v-model="loginEmail"
             class="form__input"
             type="text"
             :placeholder="t('join.email')"
           />
           <input
+            v-model="loginPassword"
             class="form__input"
             type="password"
             :placeholder="t('join.password')"
@@ -43,26 +48,30 @@
           </button>
         </form>
       </div>
+
       <!-- Sign-Up Form -->
       <div
         id="a-container"
         class="panel-container a-container"
         :class="{ 'is-txl': toggled }"
       >
-        <form @submit.prevent class="form" id="a-form">
+        <form @submit.prevent="handleSignUp" class="form" id="a-form">
           <h2 class="title">{{ t("join.createAccount") }}</h2>
           <span class="form__span">{{ t("join.orUseEmail") }}</span>
           <input
+            v-model="signUpName"
             class="form__input"
             type="text"
             :placeholder="t('join.name')"
           />
           <input
+            v-model="signUpEmail"
             class="form__input"
             type="text"
             :placeholder="t('join.email')"
           />
           <input
+            v-model="signUpPassword"
             class="form__input"
             type="password"
             :placeholder="t('join.password')"
@@ -72,6 +81,7 @@
           </button>
         </form>
       </div>
+
       <!-- Switch Panel -->
       <div
         id="switch-cnt"
@@ -80,7 +90,6 @@
       >
         <div class="switch__circle"></div>
         <div class="switch__circle switch__circle--t"></div>
-
         <div
           id="switch-c1"
           class="switch__container"
@@ -94,7 +103,6 @@
             {{ t("join.signIn") }}
           </button>
         </div>
-
         <div
           id="switch-c2"
           class="switch__container"
@@ -116,15 +124,79 @@
 <script setup>
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
+import client from "../api/client";
+import { useRouter } from "vue-router";
+import { auth } from "../stores/auth";
 
 const { t } = useI18n();
 const toggled = ref(true);
 const animating = ref(false);
+const router = useRouter();
+const emit = defineEmits(["login"]);
+
+// Sign-in form data
+const loginEmail = ref("");
+const loginPassword = ref("");
+
+// Sign-up form data
+const signUpName = ref("");
+const signUpEmail = ref("");
+const signUpPassword = ref("");
 
 function handleSwitch() {
   animating.value = true;
   setTimeout(() => (animating.value = false), 1500);
   toggled.value = !toggled.value;
+}
+
+// 1) 소셜 로그인: 네이버, 구글, 카카오
+function socialLogin(provider) {
+  window.location.href = `http://20.200.137.41:8080/oauth2/authorization/${provider}`;
+  document.cookie = `OAUTH2_REDIRECT_URI=${encodeURIComponent(
+    redirectUrl
+  )}; path=/`;
+}
+
+// 2) 자체 로그인
+async function handleLogin() {
+  try {
+    const { data } = await client.post("/api/v1/all/auth/login", {
+      email: loginEmail.value,
+      password: loginPassword.value,
+    });
+    const userInfo = {
+      name: data.username,
+      email: data.email,
+    };
+
+    // ① auth.login에 userInfo 객체를 넘깁니다
+    auth.login(userInfo);
+
+    // ② 이제 emit도 payload를 함께 던져주거나
+    emit("login", userInfo);
+
+    // ③ 혹은 emit을 쓰지 않고 바로 리다이렉트만 해도 OK
+    router.push("/List");
+  } catch (err) {
+    console.error("로그인 실패:", err);
+    alert("로그인에 실패했습니다.");
+  }
+}
+
+// 3) 자체 회원가입
+async function handleSignUp() {
+  try {
+    const { data } = await client.post("/api/v1/all/auth/signup", {
+      username: signUpName.value,
+      email: signUpEmail.value,
+      password: signUpPassword.value,
+    });
+    console.log("회원가입 성공:", data);
+    toggled.value = true;
+  } catch (err) {
+    console.error("회원가입 실패:", err);
+    alert("회원가입에 실패했습니다.");
+  }
 }
 </script>
 
