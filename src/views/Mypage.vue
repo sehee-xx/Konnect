@@ -26,28 +26,28 @@
           <!-- A) 진행 중인 여행 -->
           <section class="widget widget--ongoing">
             <div class="widget-header">
-              <h3 class="widget-title">진행 중인 여행</h3>
+              <h3 class="widget-title">In Progress</h3>
             </div>
             <div class="carousel-wrapper">
               <button class="arrow left" @click="scroll(-1, 'ongoing')">
                 ‹
               </button>
               <div class="carousel" ref="ongoingCarousel">
+                <p v-if="!ongoingTrips.length" class="empty">
+                  No in-progress trips.
+                </p>
                 <div
                   v-for="plan in ongoingTrips"
                   :key="plan.id"
                   class="trip-card"
                   @click="goDetail(plan.id)"
                 >
-                  <img :src="plan.thumbnailUrl" alt="썸네일" />
+                  <img :src="plan.thumbnailUrl" alt="thumbnail" />
                   <div class="info">
                     <h4>{{ plan.title }}</h4>
                     <p>{{ plan.dateRange }}</p>
                   </div>
                 </div>
-                <p v-if="!ongoingTrips.length" class="empty">
-                  진행 중인 여행이 없습니다.
-                </p>
               </div>
               <button class="arrow right" @click="scroll(1, 'ongoing')">
                 ›
@@ -58,28 +58,28 @@
           <!-- B) 완료된 여행 -->
           <section class="widget widget--completed">
             <div class="widget-header">
-              <h3 class="widget-title">완료된 여행</h3>
+              <h3 class="widget-title">Completed</h3>
             </div>
             <div class="carousel-wrapper">
               <button class="arrow left" @click="scroll(-1, 'completed')">
                 ‹
               </button>
               <div class="carousel" ref="completedCarousel">
+                <p v-if="!completedTrips.length" class="empty">
+                  No completed trips.
+                </p>
                 <div
                   v-for="plan in completedTrips"
                   :key="plan.id"
                   class="trip-card"
                   @click="goDetail(plan.id)"
                 >
-                  <img :src="plan.thumbnailUrl" alt="썸네일" />
+                  <img :src="plan.thumbnailUrl" alt="thumbnail" />
                   <div class="info">
                     <h4>{{ plan.title }}</h4>
                     <p>{{ plan.dateRange }}</p>
                   </div>
                 </div>
-                <p v-if="!completedTrips.length" class="empty">
-                  완료된 여행이 없습니다.
-                </p>
               </div>
               <button class="arrow right" @click="scroll(1, 'completed')">
                 ›
@@ -93,12 +93,12 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import Sidebar from "../components/Sidebar.vue";
 import defaultAvatar from "../assets/avatar.png";
 import { auth } from "../stores/auth";
-import { userPlans } from "../stores/userPlans";
+import { useUserPlans, loadPlans } from "../stores/userPlans";
 
 // 사용자 정보
 const user = computed(() => ({
@@ -107,9 +107,11 @@ const user = computed(() => ({
 }));
 const avatarUrl = computed(() => auth.user.avatarUrl || defaultAvatar);
 
-// 여행 계획
+const userPlans = useUserPlans();
+
+// 여행 계획: draft/ongoing → 진행 중, completed → 완료
 const ongoingTrips = computed(() =>
-  userPlans.plans.filter((p) => p.status === "ongoing")
+  userPlans.plans.filter((p) => p.status === "draft" || p.status === "ongoing")
 );
 const completedTrips = computed(() =>
   userPlans.plans.filter((p) => p.status === "completed")
@@ -118,11 +120,17 @@ const completedTrips = computed(() =>
 // 라우터
 const router = useRouter();
 function goDetail(id) {
-  router.push({ name: "PlanById", params: { planId: id } });
+  // 상세(TripCreate) 페이지로 이동, planId 전달
+  router.push({ name: "TripCreate", query: { planId: id } });
 }
 function goCreate() {
   router.push({ name: "TripCreate" });
 }
+
+// 진입 시 서버(스토어)에서 플랜 불러오기
+onMounted(async () => {
+  await loadPlans();
+});
 
 // 캐러셀 스크롤
 const ongoingCarousel = ref(null);
@@ -142,21 +150,18 @@ function scroll(dir, which) {
   padding: 0 14px;
   padding-top: 60px;
 }
-
 /* 레이아웃 */
 .dashboard {
   display: flex;
   min-height: 100vh;
   background: #f7f8f9;
 }
-
 .dashboard__main {
   flex: 1;
   display: flex;
   flex-direction: column;
   padding: 0 24px;
 }
-
 /* 헤더 */
 .dashboard__header {
   display: flex;
@@ -197,7 +202,6 @@ function scroll(dir, which) {
 .header-actions .btn-create:hover {
   background: #27ae60;
 }
-
 /* 메인 그리드 */
 .dashboard__content {
   display: grid;
@@ -205,7 +209,6 @@ function scroll(dir, which) {
   gap: 24px;
   padding-bottom: 40px;
 }
-
 /* 위젯 공통 */
 .widget {
   background: white;
@@ -221,8 +224,7 @@ function scroll(dir, which) {
   font-size: 1.2rem;
   font-weight: 600;
 }
-
-/* 캐러셀 래퍼 */
+/* 캐러셀 */
 .carousel-wrapper {
   position: relative;
   display: flex;
@@ -259,7 +261,6 @@ function scroll(dir, which) {
   position: absolute;
   right: -16px;
 }
-
 /* 카드 */
 .trip-card {
   min-width: 160px;
