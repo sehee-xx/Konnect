@@ -1086,7 +1086,11 @@ export default {
   margin-top: 20px;
   padding-left: 24px;
   border-left: 3px solid #c2372f;
-  background: linear-gradient(90deg, rgba(194, 55, 47, 0.05) 0%, transparent 100%);
+  background: linear-gradient(
+    90deg,
+    rgba(194, 55, 47, 0.05) 0%,
+    transparent 100%
+  );
   border-radius: 0 8px 8px 0;
   padding-top: 16px;
   padding-bottom: 16px;
