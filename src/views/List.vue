@@ -1,5 +1,4 @@
 <template>
-  <Header ref="headerRef" />
   <div class="listing-page">
     <div class="container">
       <!-- Section 1: Top 4 Most Loved Plans -->
