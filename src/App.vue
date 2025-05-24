@@ -1,16 +1,29 @@
 <!-- src/App.vue -->
 <template>
-  <router-view />
+  <!-- 1) 전역 헤더 -->
+  <Header
+    v-if="!route.meta.noHeader"
+    :is-logged-in="auth.isLoggedIn"
+    @logout="auth.logout"
+  ></Header>
+  <!-- 2) 라우터 뷰: 각 페이지(Login.vue 등)에서 로그인 성공 시 'login' 이벤트를 emit -->
+  <router-view @login="(userInfo) => auth.login(userInfo)" />
+
+  <!-- 3) 다국어 토글 버튼 (기존) -->
   <button class="btn-translate" @click="toggleLocale">
     {{ currentLocale === "en" ? "KR" : "EN" }}
   </button>
 </template>
 
 <script setup>
-import { useI18n } from "vue-i18n";
 import { computed } from "vue";
+import { useI18n } from "vue-i18n";
+import { useRoute } from "vue-router";
+import Header from "./components/Header.vue";
+import { auth } from "../src/stores/auth";
 
 const { locale } = useI18n();
+const route = useRoute();
 const currentLocale = computed(() => locale.value);
 function toggleLocale() {
   locale.value = locale.value === "en" ? "ko" : "en";
@@ -30,16 +43,12 @@ function toggleLocale() {
   font-size: 0.875rem;
   font-weight: bold;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-  transition: background 0.2s ease, transform 0.1s ease;
   z-index: 1000;
 }
 .btn-translate:hover {
   background: #bf3b38;
-  transform: translateY(-1px);
 }
 .btn-translate:active {
   background: #a73332;
-  transform: translateY(0);
 }
 </style>

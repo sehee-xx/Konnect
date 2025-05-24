@@ -1,3 +1,4 @@
+<!-- src/components/Header.vue -->
 <template>
   <header class="site-header">
     <div class="header-inner">
@@ -5,13 +6,9 @@
         <img src="../assets/logo.png" alt="Logo" />
       </div>
       <div class="search-bar">
-        <input
-          type="text"
-          placeholder="Search destination"
-          v-model="search.location"
-        />
-        <input ref="checkinRef" type="text" placeholder="Start Date" readonly />
-        <input ref="checkoutRef" type="text" placeholder="End Date" readonly />
+        <input v-model="search.location" placeholder="Search destination" />
+        <input ref="checkinRef" placeholder="Start Date" readonly />
+        <input ref="checkoutRef" placeholder="End Date" readonly />
         <button class="btn-search" @click="onSearch">Search</button>
       </div>
       <div class="controls">
@@ -19,11 +16,11 @@
           <img src="../assets/avatar.png" alt="Profile" />
         </button>
         <ul v-if="showProfileMenu" class="profile-menu">
-          <li @click="goJoin">Sign In</li>
+          <li v-if="!isLoggedIn" @click="goJoin">Sign In</li>
           <li @click="goHome">Home</li>
           <li @click="goList">List</li>
-          <li v-if="isLoggedIn" @click="goProfile">My Profile</li>
-          <li v-if="isLoggedIn" @click="logout">Logout</li>
+          <li v-if="isLoggedIn" @click="goMypage">Mypage</li>
+          <li v-if="isLoggedIn" @click="onLogout">Logout</li>
         </ul>
       </div>
     </div>
@@ -35,48 +32,37 @@ import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.css";
-import "../assets/flatpickr-overrides.css";
+
+const props = defineProps({
+  isLoggedIn: { type: Boolean, required: true },
+});
+const emit = defineEmits(["logout"]);
 
 const router = useRouter();
-
-const isLoggedIn = ref(false);
 const showProfileMenu = ref(false);
-
-const search = ref({
-  location: "",
-  checkin: "",
-  checkout: "",
-});
-
+const search = ref({ location: "", checkin: "", checkout: "" });
 const checkinRef = ref(null);
 const checkoutRef = ref(null);
 
 onMounted(() => {
-  const opts = {
-    disableMobile: true,
-    altInput: true,
-    altFormat: "m/d/Y",
-    dateFormat: "Y-m-d",
-    onReady: (_selectedDates, _dateStr, instance) => {
-      instance.calendarContainer
-        .querySelectorAll(".flatpickr-weekday")
-        .forEach((el) => {
-          el.textContent = el.textContent.trim();
-        });
-    },
-    onChange: (dates, dateStr, inst) => {
-      if (inst.input === checkinRef.value) {
-        search.value.checkin = dateStr;
-      } else {
-        search.value.checkout = dateStr;
-      }
-    },
-  };
-
-  flatpickr(checkinRef.value, opts);
-  flatpickr(checkoutRef.value, opts);
+  flatpickr(checkinRef.value, datePickerOpts);
+  flatpickr(checkoutRef.value, datePickerOpts);
 });
 
+const datePickerOpts = {
+  disableMobile: true,
+  altInput: true,
+  altFormat: "m/d/Y",
+  dateFormat: "Y-m-d",
+  onChange(dates, dateStr, inst) {
+    if (inst.input === checkinRef.value) search.value.checkin = dateStr;
+    else search.value.checkout = dateStr;
+  },
+};
+
+function toggleProfileMenu() {
+  showProfileMenu.value = !showProfileMenu.value;
+}
 function goHome() {
   router.push("/");
 }
@@ -86,19 +72,16 @@ function goJoin() {
 function goList() {
   router.push("/List");
 }
-function goProfile() {
-  router.push("/profile");
+function goMypage() {
+  router.push("/mypage");
 }
-function logout() {
-  isLoggedIn.value = false;
-}
-function toggleProfileMenu() {
-  showProfileMenu.value = !showProfileMenu.value;
-}
-
 function onSearch() {
-  console.log("Searching for", search.value);
-  // router.push({ name: 'List', query: { ...search.value } })
+  router.push({ name: "List", query: { ...search.value } });
+}
+function onLogout() {
+  emit("logout");
+  showProfileMenu.value = false;
+  router.push("/Join");
 }
 </script>
 
