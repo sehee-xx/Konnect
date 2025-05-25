@@ -17,14 +17,15 @@
           Back to My Trips
         </router-link>
 
-        <div class="header-actions">
+        <div v-if="!isReadonly" class="header-actions">
           <button class="btn-save" @click="saveDraft" :disabled="isReadonly">
             Save Draft
           </button>
 
-          <button class="btn-end" @click="endTravel" :disabled="isReadonly">
-            End Travel
-          </button>
+          <div v-if="planId">
+            <!-- planId가 있을 때만 End Travel 보이도록 -->
+            <button class="btn-end" @click="endTravel">End Travel</button>
+          </div>
         </div>
       </div>
 
@@ -40,6 +41,7 @@
                 type="text"
                 placeholder="e.g., Jeju Healing Trip"
                 class="input-primary"
+                :disabled="isReadonly"
               />
             </div>
           </div>
@@ -52,6 +54,7 @@
                   v-model="plan.startDate"
                   class="input-primary date-picker"
                   placeholder="YYYY-MM-DD"
+                  :disabled="isReadonly"
                 />
               </div>
               <span class="date-separator">~</span>
@@ -61,6 +64,7 @@
                   v-model="plan.endDate"
                   class="input-primary date-picker"
                   placeholder="YYYY-MM-DD"
+                  :disabled="isReadonly"
                 />
               </div>
             </div>
@@ -68,7 +72,11 @@
           <div class="field">
             <label>Select Region</label>
             <div class="input-wrapper">
-              <select v-model="plan.areaId" class="select-primary">
+              <select
+                v-model="plan.areaId"
+                class="select-primary"
+                :disabled="isReadonly"
+              >
                 <option disabled value="">select a region</option>
                 <option value="1">Seoul</option>
                 <option value="2">Jeonju</option>
@@ -94,6 +102,7 @@
                 rows="4"
                 placeholder="Write about your memorable moments from this trip..."
                 class="textarea-primary"
+                :disabled="isReadonly"
               ></textarea>
             </div>
           </div>
@@ -124,7 +133,11 @@
             <div class="preview" v-if="thumbnailPreview">
               <img :src="thumbnailPreview" />
               <div class="preview-overlay">
-                <button @click="removeThumbnail" class="remove-btn">
+                <button
+                  @click="removeThumbnail"
+                  class="remove-btn"
+                  v-if="!isReadonly"
+                >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <line x1="18" y1="6" x2="6" y2="18" />
                     <line x1="6" y1="6" x2="18" y2="18" />
@@ -135,7 +148,11 @@
           </div>
           <div class="field upload full">
             <label>Trip Photos (up to 9 images)</label>
-            <div class="upload-area" @click="$refs.imagesInput.click()">
+            <div
+              v-if="!isReadonly"
+              class="upload-area"
+              @click="$refs.imagesInput.click()"
+            >
               <input
                 ref="imagesInput"
                 type="file"
@@ -144,7 +161,7 @@
                 @change="onImagesChange"
                 style="display: none"
               />
-              <div class="upload-content">
+              <div v-if="!isReadonly" class="upload-content">
                 <svg
                   class="upload-icon"
                   viewBox="0 0 24 24"
@@ -160,13 +177,18 @@
             </div>
             <div class="preview-grid" v-if="imagePreviews.length">
               <div
+                v-if="!isReadonly"
                 v-for="(src, i) in imagePreviews"
                 :key="i"
                 class="preview-item"
               >
                 <img :src="src" />
                 <div class="preview-overlay">
-                  <button @click="removeImage(i)" class="remove-btn">
+                  <button
+                    v-if="!isReadonly"
+                    @click="removeImage(i)"
+                    class="remove-btn"
+                  >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <line x1="18" y1="6" x2="6" y2="18" />
                       <line x1="6" y1="6" x2="18" y2="18" />
@@ -220,6 +242,7 @@
                   @keyup.enter="searchPlace"
                   placeholder="Search restaurants & attractions"
                   class="search-input"
+                  :disabled="isReadonly"
                 />
               </div>
 
@@ -299,6 +322,7 @@
             <img src="../assets/chatbot.png" alt="AI Bot" class="bot-icon" />
             <h2>AI Generated Tags</h2>
             <button
+              v-if="!isReadonly"
               class="btn-generate"
               @click="generateTags"
               :class="{ loading: isGeneratingTags }"
@@ -332,6 +356,9 @@ import axios from "axios";
 import Header from "../components/Header.vue";
 import draggable from "vuedraggable";
 import api from "../api/client";
+import { useUserPlans } from "../stores/userPlans";
+
+const userPlans = useUserPlans();
 
 const formatDate = (d) =>
   new Date(d).toLocaleDateString("en-US", {
@@ -345,6 +372,8 @@ const placeQuery = ref("");
 const searchResults = ref([]);
 const thumbnailPreview = ref(null);
 const imagePreviews = ref([]);
+const existingImageUrls = ref([]); // 서버에서 불러온 URL들
+const newImageFiles = ref([]); // 사용자가 새로 고른 File 객체들
 const isGeneratingTags = ref(false);
 const isReadonly = ref(false);
 const isHydrated = ref(false);
@@ -401,16 +430,19 @@ onMounted(async () => {
       // 메타 정보 세팅
       plan.title = data.title;
       plan.content = data.content;
-      plan.areaId = String(data.areaId);
+      plan.areaId = String(data.area.id);
       plan.tags = data.tags;
       plan.startDate = data.startDate.slice(0, 10);
       plan.endDate = data.endDate.slice(0, 10);
 
       // 썸네일, 이미지 프리뷰 세팅
-      thumbnailPreview.value = data.thumbnail;
-      plan.thumbnail = null; // 실제 File 객체는 없으니 null
-      imagePreviews.value = data.images.map((img) => img.url); // 진짜 없음
-      plan.images = []; // 실제 File 배열은 비워둡니다
+      thumbnailPreview.value = data.thumbnail; // 단일 썸네일 URL
+      existingImageUrls.value = data.images; // 배열 형태
+      imagePreviews.value = [...data.images]; // 프리뷰로 렌더링
+
+      // 2) plan 배열은 새로 File 추가용으로 빈 채워두기
+      plan.thumbnail = data.thumbnail;
+      plan.images = [];
 
       // routes → plan.days 로 매핑
       plan.days = data.routes.map((r) => ({
@@ -424,9 +456,10 @@ onMounted(async () => {
         })),
       }));
       selectedDay.value = 0;
+      isReadonly.value = data.status === "published";
     } catch (e) {
       console.error(e);
-      await Swal.fire("Error", "여행 계획을 불러오지 못했습니다.", "error");
+      await Swal.fire("Error", "Failed to load trip plan.", "error");
     }
   }
 
@@ -591,24 +624,26 @@ const onThumbnailChange = (e) => {
 // 이미지들 변경
 const onImagesChange = async (e) => {
   const files = Array.from(e.target.files);
-  if (plan.images.length + files.length > 9) {
-    await Swal.fire({
-      icon: "warning",
-      title: "Too Many Images",
-      text: "You can upload up to 9 photos only.",
-    });
-    return;
-  }
-  files.forEach((f) => plan.images.push(f));
-  imagePreviews.value = plan.images.map((f) => URL.createObjectURL(f));
+  files.forEach((f) => {
+    newImageFiles.value.push(f);
+    imagePreviews.value.push(URL.createObjectURL(f));
+  });
 };
 
 // **이미지 삭제 함수**
 const removeImage = (idx) => {
-  plan.images.splice(idx, 1);
-  imagePreviews.value.splice(idx, 1);
-  renderDayMap();
-  syncMapHeight();
+  // 1) 미리보기(src) 배열에서 URL을 꺼냅니다
+  const removed = imagePreviews.value.splice(idx, 1)[0];
+
+  // 2) 만약 existingImageUrls 안에 있던 URL이었다면 그것도 삭제
+  const existingIdx = existingImageUrls.value.indexOf(removed);
+  if (existingIdx !== -1) {
+    existingImageUrls.value.splice(existingIdx, 1);
+  } else {
+    // 3) 그렇지 않다면 newImageFiles 쪽에서 대응하는 File을 삭제
+    //    (imagePreviews.value와 newImageFiles.value 배열이 같은 순서라고 가정)
+    newImageFiles.value.splice(idx - existingImageUrls.value.length, 1);
+  }
 };
 
 // 썸네일 삭제
@@ -768,6 +803,8 @@ const createTripDataString = () => {
 const saveDraft = async () => {
   try {
     validate();
+
+    // 1) Itinerary → routes
     const routes = plan.days.map((day) => ({
       date: day.date.toISOString().slice(0, 10),
       items: day.locations.map((loc) => ({
@@ -779,33 +816,48 @@ const saveDraft = async () => {
         longitude: loc.coordinates.lng,
       })),
     }));
+
+    // 2) JSON payload: 기존 이미지 URL 만
     const payload = {
+      ...(planId && { diaryId: Number(planId) }),
       title: plan.title,
       content: plan.content,
       areaId: Number(plan.areaId),
-      tags: plan.tags.map((t) => t.id).filter((id) => id != null),
+      tags: plan.tags.map((t) => t.id),
       startDate: plan.startDate,
       endDate: plan.endDate,
       status: "editing",
       routes,
+      // 기존에 서버에 있던 썸네일/이미지 URL
+      thumbnail: plan.thumbnail || null,
+      images: existingImageUrls.value,
     };
+
+    // 3) FormData에 JSON blob 추가
     const fd = new FormData();
     fd.append(
       "data",
       new Blob([JSON.stringify(payload)], { type: "application/json" })
     );
-    fd.append("thumbnail", plan.thumbnail);
-    plan.images.forEach((f) => fd.append("imageFiles", f));
 
-    if (route.query.planId) {
-      await axios.put(`/api/v1/user/diaries/${route.query.planId}`, fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-    } else {
-      await axios.post(`/api/v1/user/diaries`, fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+    // 4) 새로 골라둔 이미지 파일만 append
+    newImageFiles.value.forEach((file) => {
+      fd.append("images", file);
+    });
+
+    // 5) 새로 골라둔 썸네일 파일도 있을 경우 append
+    if (plan.thumbnail instanceof File) {
+      fd.append("thumbnail", plan.thumbnail);
     }
+
+    // 6) URL 결정
+    const draftUrl = planId
+      ? `/api/v1/user/diaries/${planId}`
+      : `/api/v1/user/diaries`;
+
+    // 7) 전송
+    await axios.post(draftUrl, fd);
+
     router.push("/mypage");
   } catch (err) {
     await Swal.fire({
@@ -828,21 +880,63 @@ const endTravel = async () => {
     confirmButtonText: "Publish & End",
     cancelButtonText: "Cancel",
   });
-  if (result.isConfirmed) {
-    try {
-      isReadonly.value = true;
-      await Swal.fire({
-        icon: "success",
-        title: "Done",
-        text: "Published!",
-      });
-    } catch {
-      await Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Publish failed.",
-      });
+  if (!result.isConfirmed) return;
+
+  try {
+    // 1) 유효성 검사
+    validate();
+
+    // 2) routes 계산
+    const routes = plan.days.map((day) => ({
+      date: day.date.toISOString().slice(0, 10),
+      items: day.locations.map((loc) => ({
+        visitedDate: loc.visitedDate,
+        visitedTime: loc.visitedTime + ":00",
+        distance: loc.distance,
+        title: loc.name,
+        latitude: loc.coordinates.lat,
+        longitude: loc.coordinates.lng,
+      })),
+    }));
+
+    // 3) 메타 객체 생성
+    const meta = {
+      diaryId: Number(planId),
+      title: plan.title,
+      content: plan.content,
+      areaId: Number(plan.areaId),
+      tags: plan.tags.map((t) => t.id),
+      startDate: plan.startDate,
+      endDate: plan.endDate,
+      status: "published",
+      routes,
+      thumbnail: plan.thumbnail || null,
+    };
+
+    // 4) 파일 없는 경우 기존 URL 유지
+    if (!(plan.thumbnail instanceof File) && plan.thumbnail) {
+      meta.thumbnail = plan.thumbnail;
     }
+
+    // 5) FormData에 담기
+    const fd = new FormData();
+    fd.append(
+      "data",
+      new Blob([JSON.stringify(meta)], { type: "application/json" })
+    );
+    // 6) file인 경우만 append
+    if (plan.thumbnail instanceof File) {
+      fd.append("thumbnail", plan.thumbnail);
+    }
+
+    // 7) multipart 요청 전송 (헤더 지정 없이)
+    await axios.post(`/api/v1/user/diaries/${planId}`, fd);
+
+    await Swal.fire("Published!", "Your trip has been published.", "success");
+    router.push("/mypage");
+  } catch (e) {
+    console.error(e);
+    await Swal.fire("Error", "Publish failed.", "error");
   }
 };
 </script>
