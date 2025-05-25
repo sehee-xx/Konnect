@@ -544,8 +544,9 @@ const initMap = () => {
   map = new kakao.maps.Map(el, {
     center: new kakao.maps.LatLng(33.450701, 126.570667),
     level: 5,
-    draggable: true, // 마우스 드래그 허용
-    scrollwheel: true, // 휠 줌 허용
+    draggable: true, // 마우스 “끌기” 로 pan 허용
+    scrollwheel: true, // 휠로 줌 인/아웃 허용
+    disableDoubleClickZoom: false, // 더블클릭 줌 허용 (선택)
   });
   placesSvc = new kakao.maps.services.Places();
 };
@@ -1690,6 +1691,11 @@ const endTravel = async () => {
   border-radius: 12px;
   overflow: hidden;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+  cursor: grab;
+}
+
+#kakao-map:active {
+  cursor: grabbing;
 }
 
 /* 지도 마커 라벨 */
