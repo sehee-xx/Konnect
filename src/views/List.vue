@@ -17,14 +17,14 @@
       <section class="section">
         <h2 class="section-title">Curated Recommendations</h2>
         <div class="cards-grid">
-          <div
+          <router-link
             v-for="cat in categoryList"
             :key="cat.id"
+            :to="{ name: 'CategoryPlans', params: { categoryId: cat.id } }"
             class="category-card"
-            @click="goToCategory(cat.id)"
           >
-            <div class="category-name">{{ cat.name }}</div>
-          </div>
+            {{ cat.name }}
+          </router-link>
         </div>
       </section>
 
@@ -95,11 +95,7 @@ function goToDestination(id) {
 }
 
 function goToCategory(id) {
-  router.push({
-    name: "CategoryPlans",
-    params: { categoryId: id },
-    query: { sort: "popular" },
-  });
+  router.push({ name: "CategoryPlans", params: { categoryId: id } });
 }
 </script>
 
@@ -165,5 +161,21 @@ function goToCategory(id) {
 .destination-title {
   font-size: 20px;
   font-weight: 500;
+}
+
+/* a 태그 기본 스타일 제거 */
+.category-card,
+.category-card:link,
+.category-card:visited {
+  text-decoration: none; /* 밑줄 제거 */
+  color: inherit; /* 부모 요소 색상 상속 */
+  font-size: 18px;
+}
+
+/* hover 시 색상은 기존대로 유지 */
+.category-card:hover {
+  text-decoration: none;
+  color: #fff;
+  /* background-color, color 등 기존 hover 스타일만 유지 */
 }
 </style>
