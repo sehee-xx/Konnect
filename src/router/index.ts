@@ -6,6 +6,7 @@ import List from "../views/List.vue";
 import Mypage from "../views/Mypage.vue";
 import DestinationPlans from "../views/DestinationPlans.vue";
 import TripCreate from "../views/TripCreate.vue";
+import CardDetail from "../views/CardDetail.vue";
 
 const routes = [
   {
@@ -45,7 +46,14 @@ const routes = [
   {
     path: "/plan/:planId",
     name: "PlanById",
-    component: TripCreate, // ← 여기를 CardDetail 이 아니라 TripCreate 로!
+    component: TripCreate,
+    props: true,
+  },
+  {
+    path: "/detail/:planId",
+    name: "TravelDetail",
+    component: CardDetail,
+    props: true,
   },
   {
     path: "/plan/:planId/edit",
