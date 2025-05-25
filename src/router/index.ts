@@ -5,13 +5,26 @@ import Join from "../views/Join.vue";
 import List from "../views/List.vue";
 import Mypage from "../views/Mypage.vue";
 import DestinationPlans from "../views/DestinationPlans.vue";
-import CardDetail from "../views/CardDetail.vue";
 import TripCreate from "../views/TripCreate.vue";
 
 const routes = [
-  { path: "/", component: Landing, meta: { noHeader: true } },
-  { path: "/join", component: Join, meta: { noHeader: true } },
-  { path: "/list", component: List },
+  {
+    path: "/",
+    name: "Landing",
+    component: Landing,
+    meta: { noHeader: true },
+  },
+  {
+    path: "/join",
+    name: "Join",
+    component: Join,
+    meta: { noHeader: true },
+  },
+  {
+    path: "/list",
+    name: "List",
+    component: List,
+  },
   {
     path: "/mypage",
     name: "Mypage",
@@ -21,6 +34,7 @@ const routes = [
     path: "/trip-create",
     name: "TripCreate",
     component: TripCreate,
+    props: true,
   },
   {
     path: "/list/:regionId",
@@ -31,8 +45,7 @@ const routes = [
   {
     path: "/plan/:planId",
     name: "PlanById",
-    component: CardDetail,
-    props: true,
+    component: TripCreate, // ← 여기를 CardDetail 이 아니라 TripCreate 로!
   },
   {
     path: "/plan/:planId/edit",
