@@ -474,7 +474,11 @@ const generateTags = async () => {
 
     // 최소한 content(본문) 정도는 들어가야 합니다.
     if (!plan.content.trim()) {
-      alert("여행 기록을 입력한 후 태그를 생성해주세요.");
+      await Swal.fire({
+        icon: "warning",
+        title: "Please Enter Content",
+        text: "You must write your trip journal before generating tags.",
+      });
       return;
     }
 
@@ -511,7 +515,11 @@ const generateTags = async () => {
   } catch (error) {
     console.error("태그 생성 실패:", error);
     console.error("에러 상세:", error.response?.data);
-    alert("태그 생성에 실패했습니다. 다시 시도해주세요.");
+    await Swal.fire({
+      icon: "error",
+      title: "태그 생성 실패",
+      text: "AI 태그 생성 중 오류가 발생했습니다. 다시 시도해주세요.",
+    });
   } finally {
     isGeneratingTags.value = false;
   }
@@ -713,100 +721,116 @@ const saveDraft = async () => {
     fd.append("thumbnail", plan.thumbnail);
     plan.images.forEach((f) => fd.append("imageFiles", f));
 
-    await axios.post("/api/v1/user/diaries", fd, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    if (route.query.planId) {
+      // 이미 불러온 draft 를 수정
+      await axios.put(`/api/v1/user/diaries/${route.query.planId}`, fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+    } else {
+      // 새로 생성
+      await axios.post("/api/v1/user/diaries", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+    }
 
+    // 수정/생성 후
+    await loadPlans(); // 스토어 갱신
     router.push("/mypage");
   } catch (err) {
-    alert(err.response?.data?.message || "임시저장 중 오류 발생");
+    await Swal.fire({
+      icon: "error",
+      title: "Save Failed",
+      text:
+        err.response?.data?.message ||
+        "An error occurred while saving your draft.",
+    });
   }
-};
 
-//  여행 종료(게시) 로직.
-//  1) SweetAlert2로 확인
-//  2) confirm이면 draft 저장 → publish API 호출
-const endTravel = async () => {
-  const result = await Swal.fire({
-    icon: "question",
-    title: "End Travel",
-    text: "Would you like to publish your trip diary and end this travel?",
-    showCancelButton: true,
-    confirmButtonText: "Publish & End",
-    cancelButtonText: "Cancel",
-  });
-
-  if (result.isConfirmed) {
-    try {
-      await publishPlan();
-      Swal.fire({ icon: "success", title: "Done", text: "Published!" });
-      // Published 되었으니 다시 수정 불가 상태로 이동하거나 버튼 숨기기
-      isReadonly.value = true;
-    } catch {
-      Swal.fire({ icon: "error", title: "Error", text: "Publish failed." });
-    }
-  }
-};
-
-// onMounted: 맵 초기화 후 Flatpickr 초기화
-onMounted(async () => {
-  // 1) 카카오맵 세팅
-  await loadKakao();
-  initMap();
-
-  // 2) Draft 로딩
-  const planId = route.query.planId;
-  if (planId) {
-    const draft = await userPlans.fetchDraft(planId);
-    Object.assign(plan, {
-      title: draft.title,
-      content: draft.content,
-      areaId: String(draft.areaId),
-      startDate: draft.startDate,
-      endDate: draft.endDate,
-      tags: draft.tags,
-      days: draft.routes.map((r) => ({
-        date: new Date(r.date),
-        locations: r.items.map((i) => ({
-          name: i.title,
-          coordinates: { lat: i.latitude, lng: i.longitude },
-          visitedDate: i.visitedDate,
-          visitedTime: i.visitedTime.slice(0, 5),
-          distance: i.distance,
-        })),
-      })),
+  //  여행 종료(게시) 로직.
+  //  1) SweetAlert2로 확인
+  //  2) confirm이면 draft 저장 → publish API 호출
+  const endTravel = async () => {
+    const result = await Swal.fire({
+      icon: "question",
+      title: "End Travel",
+      text: "Would you like to publish your trip diary and end this travel?",
+      showCancelButton: true,
+      confirmButtonText: "Publish & End",
+      cancelButtonText: "Cancel",
     });
 
-    if (draft.status === "published") {
-      isReadonly.value = true;
+    if (result.isConfirmed) {
+      try {
+        await publishPlan();
+        Swal.fire({ icon: "success", title: "Done", text: "Published!" });
+        // Published 되었으니 다시 수정 불가 상태로 이동하거나 버튼 숨기기
+        isReadonly.value = true;
+      } catch {
+        Swal.fire({ icon: "error", title: "Error", text: "Publish failed." });
+      }
     }
-  }
+  };
 
-  // 3) 렌더링이 끝난 뒤에 Flatpickr 붙이기
-  await nextTick();
-  flatpickr(startInput.value, {
-    dateFormat: "Y-m-d",
-    defaultDate: plan.startDate,
-    onChange: ([d]) => (plan.startDate = d.toISOString().substr(0, 10)),
-  });
-  flatpickr(endInput.value, {
-    dateFormat: "Y-m-d",
-    defaultDate: plan.endDate,
-    onChange: ([d]) => (plan.endDate = d.toISOString().substr(0, 10)),
+  // onMounted: 맵 초기화 후 Flatpickr 초기화
+  onMounted(async () => {
+    // 1) 카카오맵 세팅
+    await loadKakao();
+    initMap();
+
+    // 2) Draft 로딩
+    const planId = route.query.planId;
+    if (planId) {
+      const draft = await userPlans.fetchDraft(planId);
+      Object.assign(plan, {
+        title: draft.title,
+        content: draft.content,
+        areaId: String(draft.areaId),
+        startDate: draft.startDate,
+        endDate: draft.endDate,
+        tags: draft.tags,
+        days: draft.routes.map((r) => ({
+          date: new Date(r.date),
+          locations: r.items.map((i) => ({
+            name: i.title,
+            coordinates: { lat: i.latitude, lng: i.longitude },
+            visitedDate: i.visitedDate,
+            visitedTime: i.visitedTime.slice(0, 5),
+            distance: i.distance,
+          })),
+        })),
+      });
+
+      if (draft.status === "published") {
+        isReadonly.value = true;
+      }
+    }
+
+    // 3) 렌더링이 끝난 뒤에 Flatpickr 붙이기
+    await nextTick();
+    flatpickr(startInput.value, {
+      dateFormat: "Y-m-d",
+      defaultDate: plan.startDate,
+      onChange: ([d]) => (plan.startDate = d.toISOString().substr(0, 10)),
+    });
+    flatpickr(endInput.value, {
+      dateFormat: "Y-m-d",
+      defaultDate: plan.endDate,
+      onChange: ([d]) => (plan.endDate = d.toISOString().substr(0, 10)),
+    });
+
+    // 4) 그 외 map 렌더링, time-picker 초기화
+    renderDayMap();
+    syncMapHeight();
+    initTimePickers();
   });
 
-  // 4) 그 외 map 렌더링, time-picker 초기화
-  renderDayMap();
-  syncMapHeight();
-  initTimePickers();
-});
-
-const formatDate = (d) =>
-  new Date(d).toLocaleDateString("en-US", {
-    month: "numeric", // 5
-    day: "numeric", // 24
-    weekday: "short", // Sat
-  });
+  const formatDate = (d) =>
+    new Date(d).toLocaleDateString("en-US", {
+      month: "numeric", // 5
+      day: "numeric", // 24
+      weekday: "short", // Sat
+    });
+};
 </script>
 
 <style scoped>
