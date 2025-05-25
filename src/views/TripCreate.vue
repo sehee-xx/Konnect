@@ -589,10 +589,14 @@ const onThumbnailChange = (e) => {
 };
 
 // 이미지들 변경
-const onImagesChange = (e) => {
+const onImagesChange = async (e) => {
   const files = Array.from(e.target.files);
   if (plan.images.length + files.length > 9) {
-    alert("최대 9장까지 업로드 가능합니다.");
+    await Swal.fire({
+      icon: "warning",
+      title: "Too Many Images",
+      text: "You can upload up to 9 photos only.",
+    });
     return;
   }
   files.forEach((f) => plan.images.push(f));
@@ -705,7 +709,11 @@ const generateTags = async () => {
     }
 
     if (plan.tags.length === 0) {
-      alert("생성된 태그가 없습니다. 여행 기록을 더 자세히 작성해보세요.");
+      await Swal.fire({
+        icon: "info",
+        title: "No Tags Generated",
+        text: "No tags were generated. Try writing more details about your trip.",
+      });
     }
   } catch {
     await Swal.fire({
