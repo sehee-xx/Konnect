@@ -7,6 +7,7 @@ import Mypage from "../views/Mypage.vue";
 import DestinationPlans from "../views/DestinationPlans.vue";
 import TripCreate from "../views/TripCreate.vue";
 import CardDetail from "../views/CardDetail.vue";
+import CurationByCategory from "../views/CurationByCategory.vue";
 
 const routes = [
   {
@@ -25,6 +26,12 @@ const routes = [
     path: "/list",
     name: "List",
     component: List,
+  },
+  {
+    path: "/curation/:categoryId",
+    name: "CategoryPlans",
+    component: CurationByCategory,
+    props: true,
   },
   {
     path: "/mypage",
