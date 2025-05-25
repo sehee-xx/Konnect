@@ -514,7 +514,7 @@
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import Sidebar from "../components/Sidebar.vue";
-import defaultAvatar from "../assets/avatar.png";
+import defaultAvatar from "../assets/defaultImg.png";
 import { auth } from "../stores/auth";
 import { useUserPlans } from "../stores/userPlans";
 
@@ -650,7 +650,7 @@ body {
   min-height: 100vh;
   max-width: 1200px;
   margin: 0 auto;
-  padding-top: 60px;
+  padding-top: 80px;
 }
 
 .dashboard {
@@ -823,7 +823,7 @@ body {
   display: flex;
   align-items: center;
   gap: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
   border: 1px solid #e2e8f0;
   transition: all 0.3s ease;
   min-width: 0;
@@ -873,66 +873,6 @@ body {
   margin: 0;
   color: #6b7280;
   font-weight: 500;
-}
-
-/* 디버깅 패널 */
-.debug-panel {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
-  padding: 24px;
-  margin-bottom: 32px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  overflow: hidden;
-}
-
-.debug-header h4 {
-  margin: 0 0 20px 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.debug-content {
-  font-family: "Monaco", "Menlo", monospace;
-  font-size: 0.9rem;
-}
-
-.debug-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.debug-label {
-  font-weight: 600;
-  color: #374151;
-}
-
-.debug-value {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-weight: 600;
-}
-
-.debug-plans {
-  margin: 16px 0;
-}
-
-.debug-plan {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px;
-  background: rgba(102, 126, 234, 0.05);
-  border-radius: 12px;
-  margin-bottom: 8px;
 }
 
 .plan-number {
@@ -998,10 +938,9 @@ body {
 /* 위젯 공통 */
 .widget {
   background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
   border-radius: 24px;
   padding: 32px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   transition: all 0.3s ease;
   width: 100%;
@@ -1190,7 +1129,7 @@ body {
 
 .trip-card:hover {
   transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.2);
 }
 
 .card-image {
@@ -1216,11 +1155,6 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0.1) 0%,
-    rgba(0, 0, 0, 0.4) 100%
-  );
   display: flex;
   align-items: flex-start;
   justify-content: flex-end;
