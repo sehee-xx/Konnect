@@ -269,19 +269,28 @@
 
           <!-- ② 위치 리스트(Draggable) 또는 Empty State -->
           <div class="routes-list-wrapper">
-            <!-- locations가 있을 때 -->
             <draggable
               v-if="plan.days[selectedDay].locations.length"
               v-model="plan.days[selectedDay].locations"
-              :item-key="'name'"
-              handle=".handle"
+              :handle="'.handle'"
+              item-key="name"
               @update="onRoutesUpdated"
               class="routes-list"
+              :animation="200"
+              ghost-class="ghost"
+              chosen-class="chosen"
             >
               <template #item="{ element, index }">
                 <div class="route-item">
                   <div class="route-handle handle">
-                    <!-- handle 아이콘 SVG -->
+                    <!-- 여기에 Grab 아이콘 SVG 삽입 -->
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M4 9h16M4 15h16"
+                        stroke="#94a3b8"
+                        stroke-width="2"
+                      />
+                    </svg>
                   </div>
                   <div class="route-number">{{ index + 1 }}</div>
                   <div class="route-info">
@@ -296,12 +305,18 @@
                   </div>
                   <button class="remove-route" @click="removeLocation(index)">
                     <!-- 삭제 아이콘 SVG -->
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M18 6L6 18M6 6l12 12"
+                        stroke="#c2372f"
+                        stroke-width="2"
+                      />
+                    </svg>
                   </button>
                 </div>
               </template>
             </draggable>
 
-            <!-- locations가 없을 때 -->
             <div v-else class="empty-state">
               <img
                 src="../assets/map-pin.png"
@@ -1779,6 +1794,34 @@ const endTravel = async () => {
   to {
     transform: rotate(360deg);
   }
+}
+
+.route-handle {
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+.route-handle:active {
+  cursor: grabbing;
+}
+
+/* 카드가 이동할 때 transform 과 box-shadow 에 트랜지션을 준다 */
+.route-item {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* 드래그 중 ghost 엘리먼트는 반투명 처리 */
+.ghost {
+  opacity: 0.4;
+}
+
+/* 드래그 중인 실제 아이템은 살짝 강조 */
+.chosen {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  transform: scale(1.02);
 }
 
 /* 반응형 디자인 */
