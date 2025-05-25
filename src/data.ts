@@ -360,11 +360,11 @@ function makePlans(regionId: string, regionName: string, images: any) {
 
     return {
       id: `${regionId}${i + 1}`,
+      status: "completed", // ← add this
       image: img,
       title: `${regionName} Highlights ${i + 1}`,
       dateRange: `Jun ${1 + 3 * i}-${3 + 3 * i}`,
       tags,
-      // 항상 10장
       detailImages: pickTen(images),
       author: "Sei",
       days: makeSampleDays(images),
