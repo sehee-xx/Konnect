@@ -824,8 +824,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
+  height: 14px;
   border-radius: 50%;
   background: #c2372f;
   color: #fff;
