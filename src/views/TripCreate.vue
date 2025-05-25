@@ -310,10 +310,10 @@
           <ul class="tag-list">
             <li
               v-for="tag in plan.tags"
-              :key="tag.id != null ? tag.id : tag.name"
+              :key="tag.id != null ? tag.id : tag.nameEng"
               class="tag-item"
             >
-              {{ tag.name }}
+              {{ tag.nameEng }}
             </li>
           </ul>
         </div>
@@ -499,7 +499,7 @@ const generateTags = async () => {
       Array.isArray(response.data) &&
       typeof response.data[0] === "string"
     ) {
-      plan.tags = response.data.map((name, idx) => ({ id: null, name }));
+      plan.tags = response.data.map((name, idx) => ({ id: null, nameEng }));
     }
 
     console.log("최종 태그:", plan.tags); // 디버깅용
