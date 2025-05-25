@@ -24,6 +24,13 @@
 
           <div v-if="planId">
             <!-- planId가 있을 때만 End Travel 보이도록 -->
+            <button class="btn-delete" @click="deleteTravel">
+              Delete Travel
+            </button>
+          </div>
+
+          <div v-if="planId">
+            <!-- planId가 있을 때만 End Travel 보이도록 -->
             <button class="btn-end" @click="endTravel">End Travel</button>
           </div>
         </div>
@@ -870,6 +877,29 @@ const saveDraft = async () => {
   }
 };
 
+// 여행 삭제
+const deleteTravel = async () => {
+  const result = await Swal.fire({
+    icon: "warning",
+    title: "Delete Travel",
+    text: "Are you sure you want to delete this trip? This action cannot be undone.",
+    showCancelButton: true,
+    confirmButtonText: "Yes, delete it",
+    cancelButtonText: "Cancel",
+  });
+
+  if (!result.isConfirmed) return;
+
+  try {
+    await userPlans.deletePlan(planId);
+    await Swal.fire("Deleted!", "Your trip has been deleted.", "success");
+    router.push("/mypage");
+  } catch (e) {
+    console.error(e);
+    await Swal.fire("Error", "Failed to delete. Please try again.", "error");
+  }
+};
+
 // 여행 완료 (Publish)
 const endTravel = async () => {
   const result = await Swal.fire({
@@ -911,6 +941,7 @@ const endTravel = async () => {
       status: "published",
       routes,
       thumbnail: plan.thumbnail || null,
+      images: existingImageUrls.value,
     };
 
     // 4) 파일 없는 경우 기존 URL 유지
@@ -964,6 +995,21 @@ const endTravel = async () => {
 .header-actions {
   display: flex;
   gap: 12px;
+}
+
+.btn-delete {
+  background: #5880b7;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-delete:hover {
+  transform: translateY(-2px);
 }
 
 /* Save(빨강) 옆에 Publish(파랑) 버튼 */
