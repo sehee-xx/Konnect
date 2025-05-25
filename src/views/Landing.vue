@@ -83,9 +83,6 @@
             ><span>{{ $t("landing3.TripsPlans") }}</span>
           </div>
         </div>
-        <button class="btn btn-outline2">
-          {{ $t("landing3.Button") }}
-        </button>
       </div>
     </section>
   </div>
@@ -111,7 +108,7 @@ const page2Items = [
 ];
 const cardRefs = ref([]);
 let animationFrame,
-  rotationSpeed = 0.5,
+  rotationSpeed = 1.0,
   currentRotation = 0;
 
 onMounted(() => {
