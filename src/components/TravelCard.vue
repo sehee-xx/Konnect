@@ -1,5 +1,5 @@
 <template>
-  <div class="travel-card" @click="goDetail">
+  <div class="travel-card" @click="goDetail(plan)">
     <div class="image-wrapper">
       <img :src="plan.image" :alt="plan.title" class="card-image" />
       <div class="overlay">
@@ -38,11 +38,13 @@ const props = defineProps({
 
 const router = useRouter();
 
-function goDetail() {
-  router.push({
-    name: "PlanById",
-    params: { planId: props.plan.id },
-  });
+// plan 객체를 그대로 받아서 status 체크
+function goDetail(plan) {
+  if (plan.status === "completed") {
+    router.push({ name: "TravelDetail", params: { planId: plan.id } });
+  } else {
+    router.push({ name: "PlanById", params: { planId: plan.id } });
+  }
 }
 </script>
 
