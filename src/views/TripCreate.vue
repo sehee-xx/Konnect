@@ -326,21 +326,28 @@
 import { ref, reactive, watch, onMounted, nextTick } from "vue";
 import Swal from "sweetalert2";
 import flatpickr from "flatpickr";
-import "flatpickr/dist/themes/material_red.css"; // 빨간 테마
-import { useRoute } from "vue-router";
-import { useRouter } from "vue-router";
+import "flatpickr/dist/themes/material_red.css";
+import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
 import Header from "../components/Header.vue";
 import draggable from "vuedraggable";
 import api from "../api/client";
-import chatbotImg from "../assets/chatbot.png";
 
+const formatDate = (d) =>
+  new Date(d).toLocaleDateString("en-US", {
+    month: "numeric",
+    day: "numeric",
+    weekday: "short",
+  });
+
+// state refs
 const placeQuery = ref("");
 const searchResults = ref([]);
 const thumbnailPreview = ref(null);
 const imagePreviews = ref([]);
 const isGeneratingTags = ref(false);
 const isReadonly = ref(false);
+const isHydrated = ref(false);
 
 let placesSvc = null;
 let map,
@@ -348,9 +355,25 @@ let map,
   overlays = [],
   polyline;
 
-// --- 상태 정의 ---
+// route and router
 const route = useRoute();
 const router = useRouter();
+const planId = route.params.planId;
+
+const regenerateDays = () => {
+  const s = new Date(plan.startDate);
+  const e = new Date(plan.endDate);
+  const days = [];
+  for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
+    days.push({ date: new Date(d), locations: [] });
+  }
+  plan.days = days;
+};
+
+const routesRef = ref(null);
+const mapRef = ref(null);
+
+// plan reactive data
 const plan = reactive({
   title: "",
   content: "",
@@ -364,43 +387,115 @@ const plan = reactive({
 });
 const selectedDay = ref(0);
 
-// Flatpickr 붙일 input ref
+// refs for date inputs and map sizing
 const startInput = ref(null);
 const endInput = ref(null);
 
-const initTimePickers = () => {
-  // class="time-picker" 인 모든 input 태그에 time-picker flatpickr 붙이기
-  document.querySelectorAll("input.time-picker").forEach((inputEl) => {
-    flatpickr(inputEl, {
-      enableTime: true,
-      noCalendar: true,
-      dateFormat: "H:i",
-      time_24hr: true,
-      theme: "material_red",
-    });
-  });
-};
+// 초기화
+onMounted(async () => {
+  // ─────────────────────────────────────────────────────────────
+  // 1) 수정 모드: planId 가 있으면 기존 계획 불러오기
+  if (planId) {
+    try {
+      const { data } = await axios.get(`/api/v1/user/diaries/${planId}`);
+      // 메타 정보 세팅
+      plan.title = data.title;
+      plan.content = data.content;
+      plan.areaId = String(data.areaId);
+      plan.tags = data.tags;
+      plan.startDate = data.startDate.slice(0, 10);
+      plan.endDate = data.endDate.slice(0, 10);
 
-const selectDay = (i) => {
-  selectedDay.value = i;
+      // 썸네일, 이미지 프리뷰 세팅
+      thumbnailPreview.value = data.thumbnail;
+      plan.thumbnail = null; // 실제 File 객체는 없으니 null
+      imagePreviews.value = data.images.map((img) => img.url); // 진짜 없음
+      plan.images = []; // 실제 File 배열은 비워둡니다
+
+      // routes → plan.days 로 매핑
+      plan.days = data.routes.map((r) => ({
+        date: new Date(r.date),
+        locations: r.items.map((it) => ({
+          name: it.title,
+          coordinates: { lat: it.latitude, lng: it.longitude },
+          visitedDate: it.visitedDate,
+          visitedTime: it.visitedTime.slice(0, 5),
+          distance: it.distance,
+        })),
+      }));
+      selectedDay.value = 0;
+    } catch (e) {
+      console.error(e);
+      await Swal.fire("Error", "여행 계획을 불러오지 못했습니다.", "error");
+    }
+  }
+
+  await nextTick();
+
+  flatpickr(startInput.value, {
+    dateFormat: "Y-m-d",
+    defaultDate: plan.startDate,
+    onChange: ([d]) => {
+      // 초기 로딩 때는 무시
+      if (!isHydrated.value) return;
+      plan.startDate = d.toISOString().substr(0, 10);
+    },
+  });
+
+  flatpickr(endInput.value, {
+    dateFormat: "Y-m-d",
+    defaultDate: plan.endDate,
+    onChange: ([d]) => {
+      // 초기 로딩 때는 무시
+      if (!isHydrated.value) return;
+      plan.startDate = d.toISOString().substr(0, 10);
+    },
+  });
+
+  isHydrated.value = true;
+
+  await loadKakao();
+  initMap();
   renderDayMap();
   syncMapHeight();
+  initTimePickers();
+});
+
+// 선택된 Day의 마커가 전부 보이도록 지도를 재배치
+const resetMapView = () => {
+  const day = plan.days[selectedDay.value];
+  if (!day.locations.length) return;
+
+  // 1) Bounds 생성
+  const bounds = new kakao.maps.LatLngBounds();
+  day.locations.forEach((loc) => {
+    bounds.extend(
+      new kakao.maps.LatLng(loc.coordinates.lat, loc.coordinates.lng)
+    );
+  });
+
+  // 2) 단일 마커이면 직접 center, 복수 마커면 bounds
+  if (day.locations.length === 1) {
+    const { lat, lng } = day.locations[0].coordinates;
+    map.setCenter(new kakao.maps.LatLng(lat, lng));
+  } else {
+    map.setBounds(bounds);
+  }
 };
 
-watch(
-  () => [plan.startDate, plan.endDate],
-  () => {
-    const s = new Date(plan.startDate),
-      e = new Date(plan.endDate),
-      days = [];
-    for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1))
-      days.push({ date: new Date(d), locations: [] });
-    plan.days = days;
-    if (selectedDay.value >= days.length) selectedDay.value = days.length - 1;
-  },
-  { immediate: true }
-);
+// 맵 초기화
+const initMap = () => {
+  const el = document.getElementById("kakao-map");
+  map = new kakao.maps.Map(el, {
+    center: new kakao.maps.LatLng(33.450701, 126.570667),
+    level: 5,
+    draggable: true, // 마우스 드래그 허용
+    scrollwheel: true, // 휠 줌 허용
+  });
+  placesSvc = new kakao.maps.services.Places();
+};
 
+// 카카오맵 SDK 로드
 const loadKakao = () =>
   new Promise((res, rej) => {
     if (window.kakao && window.kakao.maps) return window.kakao.maps.load(res);
@@ -412,13 +507,35 @@ const loadKakao = () =>
     document.head.appendChild(s);
   });
 
-const initMap = () => {
-  const el = document.getElementById("kakao-map");
-  map = new kakao.maps.Map(el, {
-    center: new kakao.maps.LatLng(33.450701, 126.570667),
-    level: 5,
+// 날짜-시간 Picker 초기화
+const initTimePickers = () => {
+  document.querySelectorAll("input.time-picker").forEach((inputEl) => {
+    flatpickr(inputEl, {
+      enableTime: true,
+      noCalendar: true,
+      dateFormat: "H:i",
+      time_24hr: true,
+      theme: "material_red",
+    });
   });
-  placesSvc = new kakao.maps.services.Places();
+};
+
+// 날짜 범위 변경 감지 → days 재생성
+watch(
+  () => [plan.startDate, plan.endDate],
+  (newVal, oldVal) => {
+    // date 값이 정말 바뀌었을 때만
+    if (!isHydrated.value) return;
+    if (newVal[0] === oldVal[0] && newVal[1] === oldVal[1]) return;
+    regenerateDays();
+  }
+);
+
+// Day 선택
+const selectDay = (i) => {
+  selectedDay.value = i;
+  renderDayMap();
+  syncMapHeight();
 };
 
 // 장소 검색
@@ -433,14 +550,13 @@ const searchPlace = () => {
   });
 };
 
+// 장소 선택
 const selectPlace = (place) => {
   plan.days[selectedDay.value].locations.push({
     name: place.place_name,
     coordinates: { lat: +place.y, lng: +place.x },
     visitedDate: plan.days[selectedDay.value].date.toISOString().substr(0, 10),
     visitedTime: "09:00",
-    attractionNo: null,
-    diaryId: null,
     distance: 0,
   });
   placeQuery.value = "";
@@ -450,7 +566,13 @@ const selectPlace = (place) => {
   initTimePickers();
 };
 
-// 일정 삭제
+// 일정 리스트 Drag & Drop 후
+const onRoutesUpdated = () => {
+  renderDayMap();
+  syncMapHeight();
+};
+
+// 일정 항목 삭제
 const removeLocation = (idx) => {
   plan.days[selectedDay.value].locations.splice(idx, 1);
   renderDayMap();
@@ -458,156 +580,59 @@ const removeLocation = (idx) => {
   initTimePickers();
 };
 
-// 이미지 삭제
+// 썸네일 변경
+const onThumbnailChange = (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  plan.thumbnail = f;
+  thumbnailPreview.value = URL.createObjectURL(f);
+};
+
+// 이미지들 변경
+const onImagesChange = (e) => {
+  const files = Array.from(e.target.files);
+  if (plan.images.length + files.length > 9) {
+    alert("최대 9장까지 업로드 가능합니다.");
+    return;
+  }
+  files.forEach((f) => plan.images.push(f));
+  imagePreviews.value = plan.images.map((f) => URL.createObjectURL(f));
+};
+
+// **이미지 삭제 함수**
 const removeImage = (idx) => {
   plan.images.splice(idx, 1);
   imagePreviews.value.splice(idx, 1);
-};
-
-// 태그 관련 함수들
-// generateTags 함수 수정
-const generateTags = async () => {
-  if (isGeneratingTags.value) return;
-
-  try {
-    isGeneratingTags.value = true;
-
-    // 최소한 content(본문) 정도는 들어가야 합니다.
-    if (!plan.content.trim()) {
-      await Swal.fire({
-        icon: "warning",
-        title: "Please Enter Content",
-        text: "You must write your trip journal before generating tags.",
-      });
-      return;
-    }
-
-    const dataString = createTripDataString();
-
-    // 2) 그 문자열을 content로 넘겨서 태그 생성 요청
-    const payload = {
-      content: dataString,
-    };
-
-    const response = await api.post("/api/v1/user/ai-tags/generate", payload);
-
-    console.log("태그 생성 응답:", response.data); // 디버깅용
-
-    // 응답 구조에 따라 다르게 처리
-    if (Array.isArray(response.data) && response.data[0]?.id != null) {
-      // [{ id: 1, name: "힐링" }, …]
-      plan.tags = response.data;
-    }
-    // 혹은 ["힐링","자연"] 같은 문자열 배열 형태라면
-    else if (
-      Array.isArray(response.data) &&
-      typeof response.data[0] === "string"
-    ) {
-      plan.tags = response.data.map((name, idx) => ({ id: null, nameEng }));
-    }
-
-    console.log("최종 태그:", plan.tags); // 디버깅용
-
-    // 태그가 생성되었는지 확인
-    if (plan.tags.length === 0) {
-      alert("생성된 태그가 없습니다. 여행 기록을 더 자세히 작성해보세요.");
-    }
-  } catch (error) {
-    console.error("태그 생성 실패:", error);
-    console.error("에러 상세:", error.response?.data);
-    await Swal.fire({
-      icon: "error",
-      title: "태그 생성 실패",
-      text: "AI 태그 생성 중 오류가 발생했습니다. 다시 시도해주세요.",
-    });
-  } finally {
-    isGeneratingTags.value = false;
-  }
-};
-
-const removeTag = (index) => {
-  plan.tags.splice(index, 1);
-};
-
-const createTripDataString = () => {
-  const parts = [];
-
-  // 제목
-  if (plan.title.trim()) {
-    parts.push(`제목: ${plan.title}`);
-  }
-
-  // 여행 기록
-  if (plan.content.trim()) {
-    parts.push(`여행 기록: ${plan.content}`);
-  }
-
-  // 지역
-  const areaNames = {
-    1: "Seoul",
-    2: "Jeonju",
-    3: "Busan",
-    4: "Jeju",
-    5: "Yeosu",
-    6: "Other",
-  };
-  if (plan.areaId && areaNames[plan.areaId]) {
-    parts.push(`지역: ${areaNames[plan.areaId]}`);
-  }
-
-  // 여행 일정
-  if (plan.days.length > 0) {
-    const itinerary = plan.days
-      .map((day, index) => {
-        const locations = day.locations.map((loc) => loc.name).join(", ");
-        return locations ? `Day ${index + 1}: ${locations}` : "";
-      })
-      .filter(Boolean);
-
-    if (itinerary.length > 0) {
-      parts.push(`여행 일정: ${itinerary.join(" | ")}`);
-    }
-  }
-
-  return parts.join(" / ");
-};
-
-const resetMapView = () => {
   renderDayMap();
+  syncMapHeight();
 };
 
+// 썸네일 삭제
+const removeThumbnail = () => {
+  plan.thumbnail = null;
+  thumbnailPreview.value = null;
+};
+
+// 맵 마커 & 폴리라인 그리기
 const renderDayMap = () => {
   if (!map) return;
-
-  // 1) 기존 Marker, Overlay, Polyline 전부 지우기
   markers.forEach((m) => m.setMap(null));
-  markers = [];
-
   overlays.forEach((o) => o.setMap(null));
+  if (polyline) polyline.setMap(null);
+  markers = [];
   overlays = [];
+  polyline = null;
 
-  if (polyline) {
-    polyline.setMap(null);
-    polyline = null;
-  }
-
-  // 2) 새로운 하루꺼만 그리기
   const day = plan.days[selectedDay.value];
   const path = [];
   const bounds = new kakao.maps.LatLngBounds();
 
   day.locations.forEach((loc, i) => {
     const pos = new kakao.maps.LatLng(loc.coordinates.lat, loc.coordinates.lng);
-
-    // Marker
     const marker = new kakao.maps.Marker({ position: pos, map });
     markers.push(marker);
     bounds.extend(pos);
-
-    // Polyline 경로용
     path.push(pos);
-
-    // CustomOverlay (숫자 라벨)
     const overlay = new kakao.maps.CustomOverlay({
       position: pos,
       content: `<div class="map-marker-label">${i + 1}</div>`,
@@ -618,7 +643,6 @@ const renderDayMap = () => {
     overlays.push(overlay);
   });
 
-  // 3) Polyline 그리기
   if (path.length > 1) {
     polyline = new kakao.maps.Polyline({
       path,
@@ -633,9 +657,7 @@ const renderDayMap = () => {
   }
 };
 
-const routesRef = ref(null),
-  mapRef = ref(null);
-
+// 맵 크기 동기화
 const syncMapHeight = async () => {
   await nextTick();
   const h = routesRef.value?.clientHeight || 400;
@@ -643,65 +665,112 @@ const syncMapHeight = async () => {
     mapRef.value.style.height = `${h}px`;
     map?.relayout();
   }
-  initTimePickers(); // 여기서만 호출
-};
-const onRoutesUpdated = () => {
-  renderDayMap();
-  syncMapHeight();
   initTimePickers();
 };
 
-const onThumbnailChange = (e) => {
-  const f = e.target.files[0];
-  if (!f) return;
-  plan.thumbnail = f;
-  thumbnailPreview.value = URL.createObjectURL(f);
-};
-
-const onImagesChange = (e) => {
-  const files = Array.from(e.target.files);
-  if (plan.images.length + files.length > 9) {
-    alert("최대 9장까지 업로드 가능합니다.");
-    return;
-  }
-  files.forEach((f) => plan.images.push(f));
-  imagePreviews.value = plan.images.map((f) => URL.createObjectURL(f));
-};
-
+// 유효성 검사
 const validate = () => {
   if (!plan.title.trim()) throw new Error("제목을 입력하세요");
   if (!plan.content.trim()) throw new Error("내용을 입력하세요");
   if (!plan.areaId) throw new Error("지역을 선택해주세요");
-  if (!plan.thumbnail) throw new Error("썸네일을 업로드해주세요");
-  if (plan.images.length === 0) throw new Error("일반 사진을 업로드해주세요");
-  plan.days.forEach((day, di) =>
-    day.locations.forEach((l, li) => {
-      if (!l.visitedDate)
-        throw new Error(`Day${di + 1} ${li + 1}번째 날짜 선택하세요`);
-      if (!l.visitedTime)
-        throw new Error(`Day${di + 1} ${li + 1}번째 시간 선택하세요`);
-    })
-  );
 };
 
+// AI 태그 생성
+const generateTags = async () => {
+  if (isGeneratingTags.value) return;
+
+  if (!plan.content.trim()) {
+    await Swal.fire({
+      icon: "warning",
+      title: "Please Enter Content",
+      text: "You must write your trip journal before generating tags.",
+    });
+    return;
+  }
+
+  isGeneratingTags.value = true;
+  try {
+    const dataString = createTripDataString();
+    const response = await api.post("/api/v1/user/ai-tags/generate", {
+      content: dataString,
+    });
+
+    if (Array.isArray(response.data) && response.data[0]?.id != null) {
+      plan.tags = response.data;
+    } else if (
+      Array.isArray(response.data) &&
+      typeof response.data[0] === "string"
+    ) {
+      plan.tags = response.data.map((name) => ({ id: null, nameEng: name }));
+    }
+
+    if (plan.tags.length === 0) {
+      alert("생성된 태그가 없습니다. 여행 기록을 더 자세히 작성해보세요.");
+    }
+  } catch {
+    await Swal.fire({
+      icon: "error",
+      title: "태그 생성 실패",
+      text: "AI 태그 생성 중 오류가 발생했습니다. 다시 시도해주세요.",
+    });
+  } finally {
+    isGeneratingTags.value = false;
+  }
+};
+
+// 태그 삭제
+const removeTag = (index) => {
+  plan.tags.splice(index, 1);
+};
+
+// 문자열로 변환
+const createTripDataString = () => {
+  const parts = [];
+  if (plan.title.trim()) parts.push(`제목: ${plan.title}`);
+  if (plan.content.trim()) parts.push(`여행 기록: ${plan.content}`);
+
+  const areaNames = {
+    1: "Seoul",
+    2: "Jeonju",
+    3: "Busan",
+    4: "Jeju",
+    5: "Yeosu",
+    6: "Other",
+  };
+  if (plan.areaId && areaNames[plan.areaId]) {
+    parts.push(`지역: ${areaNames[plan.areaId]}`);
+  }
+
+  if (plan.days.length) {
+    const itinerary = plan.days
+      .map((day, idx) => {
+        const locs = day.locations.map((l) => l.name).join(", ");
+        return locs ? `Day ${idx + 1}: ${locs}` : "";
+      })
+      .filter(Boolean);
+    if (itinerary.length) {
+      parts.push(`여행 일정: ${itinerary.join(" | ")}`);
+    }
+  }
+
+  return parts.join(" / ");
+};
+
+// 저장 (POST/PUT)
 const saveDraft = async () => {
   try {
     validate();
-
-    // 1) routesObj 생성: 예제 스펙의 routes.items 구조에 딱 맞춰서
     const routes = plan.days.map((day) => ({
-      date: day.date.toISOString().slice(0, 10), // "2025-06-10"
+      date: day.date.toISOString().slice(0, 10),
       items: day.locations.map((loc) => ({
-        visitedDate: loc.visitedDate, // "2025-06-10"
-        visitedTime: loc.visitedTime + ":00", // "09:00" → "09:00:00"
-        distance: loc.distance, // 500.0
-        title: loc.name, // "전주 한옥마을 입구"
-        latitude: loc.coordinates.lat, // 35.8167
-        longitude: loc.coordinates.lng, // 127.1480
+        visitedDate: loc.visitedDate,
+        visitedTime: loc.visitedTime + ":00",
+        distance: loc.distance,
+        title: loc.name,
+        latitude: loc.coordinates.lat,
+        longitude: loc.coordinates.lng,
       })),
     }));
-
-    // 2) payload 객체 (Swagger 예제엔 최상위가 data 없이 바로 필드들만)
     const payload = {
       title: plan.title,
       content: plan.content,
@@ -712,7 +781,6 @@ const saveDraft = async () => {
       status: "editing",
       routes,
     };
-
     const fd = new FormData();
     fd.append(
       "data",
@@ -722,19 +790,14 @@ const saveDraft = async () => {
     plan.images.forEach((f) => fd.append("imageFiles", f));
 
     if (route.query.planId) {
-      // 이미 불러온 draft 를 수정
       await axios.put(`/api/v1/user/diaries/${route.query.planId}`, fd, {
         headers: { "Content-Type": "multipart/form-data" },
       });
     } else {
-      // 새로 생성
-      await axios.post("/api/v1/user/diaries", fd, {
+      await axios.post(`/api/v1/user/diaries`, fd, {
         headers: { "Content-Type": "multipart/form-data" },
       });
     }
-
-    // 수정/생성 후
-    await loadPlans(); // 스토어 갱신
     router.push("/mypage");
   } catch (err) {
     await Swal.fire({
@@ -745,91 +808,34 @@ const saveDraft = async () => {
         "An error occurred while saving your draft.",
     });
   }
+};
 
-  //  여행 종료(게시) 로직.
-  //  1) SweetAlert2로 확인
-  //  2) confirm이면 draft 저장 → publish API 호출
-  const endTravel = async () => {
-    const result = await Swal.fire({
-      icon: "question",
-      title: "End Travel",
-      text: "Would you like to publish your trip diary and end this travel?",
-      showCancelButton: true,
-      confirmButtonText: "Publish & End",
-      cancelButtonText: "Cancel",
-    });
-
-    if (result.isConfirmed) {
-      try {
-        await publishPlan();
-        Swal.fire({ icon: "success", title: "Done", text: "Published!" });
-        // Published 되었으니 다시 수정 불가 상태로 이동하거나 버튼 숨기기
-        isReadonly.value = true;
-      } catch {
-        Swal.fire({ icon: "error", title: "Error", text: "Publish failed." });
-      }
-    }
-  };
-
-  // onMounted: 맵 초기화 후 Flatpickr 초기화
-  onMounted(async () => {
-    // 1) 카카오맵 세팅
-    await loadKakao();
-    initMap();
-
-    // 2) Draft 로딩
-    const planId = route.query.planId;
-    if (planId) {
-      const draft = await userPlans.fetchDraft(planId);
-      Object.assign(plan, {
-        title: draft.title,
-        content: draft.content,
-        areaId: String(draft.areaId),
-        startDate: draft.startDate,
-        endDate: draft.endDate,
-        tags: draft.tags,
-        days: draft.routes.map((r) => ({
-          date: new Date(r.date),
-          locations: r.items.map((i) => ({
-            name: i.title,
-            coordinates: { lat: i.latitude, lng: i.longitude },
-            visitedDate: i.visitedDate,
-            visitedTime: i.visitedTime.slice(0, 5),
-            distance: i.distance,
-          })),
-        })),
-      });
-
-      if (draft.status === "published") {
-        isReadonly.value = true;
-      }
-    }
-
-    // 3) 렌더링이 끝난 뒤에 Flatpickr 붙이기
-    await nextTick();
-    flatpickr(startInput.value, {
-      dateFormat: "Y-m-d",
-      defaultDate: plan.startDate,
-      onChange: ([d]) => (plan.startDate = d.toISOString().substr(0, 10)),
-    });
-    flatpickr(endInput.value, {
-      dateFormat: "Y-m-d",
-      defaultDate: plan.endDate,
-      onChange: ([d]) => (plan.endDate = d.toISOString().substr(0, 10)),
-    });
-
-    // 4) 그 외 map 렌더링, time-picker 초기화
-    renderDayMap();
-    syncMapHeight();
-    initTimePickers();
+// 여행 완료 (Publish)
+const endTravel = async () => {
+  const result = await Swal.fire({
+    icon: "question",
+    title: "End Travel",
+    text: "Would you like to publish your trip diary and end this travel?",
+    showCancelButton: true,
+    confirmButtonText: "Publish & End",
+    cancelButtonText: "Cancel",
   });
-
-  const formatDate = (d) =>
-    new Date(d).toLocaleDateString("en-US", {
-      month: "numeric", // 5
-      day: "numeric", // 24
-      weekday: "short", // Sat
-    });
+  if (result.isConfirmed) {
+    try {
+      isReadonly.value = true;
+      await Swal.fire({
+        icon: "success",
+        title: "Done",
+        text: "Published!",
+      });
+    } catch {
+      await Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Publish failed.",
+      });
+    }
+  }
 };
 </script>
 
