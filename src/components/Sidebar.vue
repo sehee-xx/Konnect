@@ -11,13 +11,6 @@
         </router-link>
       </li>
       <li>
-        <!-- Curation (만약 Curation 뷰가 없다면, 먼저 router에 /curation 경로를 추가하세요) -->
-        <router-link to="/curation" class="sidebar__link" active-class="active">
-          <i class="fas fa-layer-group"></i>
-          <span>Curation</span>
-        </router-link>
-      </li>
-      <li>
         <!-- 전체 리스트 -->
         <router-link to="/list" class="sidebar__link" active-class="active">
           <i class="fas fa-list"></i>
