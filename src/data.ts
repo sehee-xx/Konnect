@@ -340,6 +340,15 @@ const SAMPLE_COMMENTS = [
   },
 ];
 
+export const regionList = [
+  { id: "서울", name: "Seoul" },
+  { id: "전주", name: "Jeonju" },
+  { id: "부산", name: "Busan" },
+  { id: "제주", name: "Jeju" },
+  { id: "여수", name: "Yeosu" },
+  { id: "기타", name: "Other" },
+];
+
 function pickTen(images: any) {
   const picked = images.slice(0, 10);
   let idx = 0;
