@@ -62,12 +62,6 @@ const routes = [
     component: CardDetail,
     props: true,
   },
-  {
-    path: "/plan/:planId/edit",
-    name: "PlanEdit",
-    component: () => import("../views/TravelEdit.vue"),
-    props: true,
-  },
 ];
 
 export default createRouter({
