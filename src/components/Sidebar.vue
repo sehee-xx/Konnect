@@ -20,7 +20,7 @@
       <li>
         <!-- 서울 여행 계획 (regionId에 맞춰서 param 전달) -->
         <router-link
-          :to="{ name: 'DestinationPlans', params: { regionId: 'seoul' } }"
+          :to="{ name: 'DestinationPlans', params: { regionId: '1' } }"
           class="sidebar__link"
           active-class="active"
         >
@@ -30,7 +30,17 @@
       </li>
       <li>
         <router-link
-          :to="{ name: 'DestinationPlans', params: { regionId: 'busan' } }"
+          :to="{ name: 'DestinationPlans', params: { regionId: '2' } }"
+          class="sidebar__link"
+          active-class="active"
+        >
+          <i class="fas fa-utensils"></i>
+          <span>Jeonju</span>
+        </router-link>
+      </li>
+      <li>
+        <router-link
+          :to="{ name: 'DestinationPlans', params: { regionId: '3' } }"
           class="sidebar__link"
           active-class="active"
         >
@@ -40,17 +50,7 @@
       </li>
       <li>
         <router-link
-          :to="{ name: 'DestinationPlans', params: { regionId: 'yeosu' } }"
-          class="sidebar__link"
-          active-class="active"
-        >
-          <i class="fas fa-anchor"></i>
-          <span>Yeosu</span>
-        </router-link>
-      </li>
-      <li>
-        <router-link
-          :to="{ name: 'DestinationPlans', params: { regionId: 'jeju' } }"
+          :to="{ name: 'DestinationPlans', params: { regionId: '4' } }"
           class="sidebar__link"
           active-class="active"
         >
@@ -60,12 +60,22 @@
       </li>
       <li>
         <router-link
-          :to="{ name: 'DestinationPlans', params: { regionId: 'jeonju' } }"
+          :to="{ name: 'DestinationPlans', params: { regionId: '5' } }"
+          class="sidebar__link"
+          active-class="active"
+        >
+          <i class="fas fa-anchor"></i>
+          <span>Yeosu</span>
+        </router-link>
+      </li>
+      <li>
+        <router-link
+          :to="{ name: 'DestinationPlans', params: { regionId: '6' } }"
           class="sidebar__link"
           active-class="active"
         >
           <i class="fas fa-utensils"></i>
-          <span>Jeonju</span>
+          <span>Others</span>
         </router-link>
       </li>
     </ul>
