@@ -42,3 +42,8 @@ body,
   padding: 0px var(--gutter);
   margin-bottom: 30px;
 }
+
+.card-link {
+  text-decoration: none !important;
+  color: inherit !important;
+}
