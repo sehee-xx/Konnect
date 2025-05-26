@@ -379,6 +379,7 @@ import Header from "../components/Header.vue";
 import draggable from "vuedraggable";
 import api from "../api/client";
 import { useUserPlans } from "../stores/userPlans";
+import { emitter } from "../plugins/emitter";
 
 const userPlans = useUserPlans();
 
@@ -445,6 +446,7 @@ const endInput = ref(null);
 // 초기화
 onMounted(async () => {
   // ─────────────────────────────────────────────────────────────
+  emitter.emit("start-loading");
   // 1) 수정 모드: planId 가 있으면 기존 계획 불러오기
   if (planId) {
     try {
@@ -486,6 +488,7 @@ onMounted(async () => {
   }
 
   await nextTick();
+  emitter.emit("end-loading");
 
   flatpickr(startInput.value, {
     dateFormat: "Y-m-d",
