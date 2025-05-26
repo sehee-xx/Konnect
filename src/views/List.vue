@@ -199,6 +199,22 @@ function goToDestination(id) {
   color: #fff;
 }
 
+.cards-grid > .category-card:nth-child(1):hover {
+  background-color: #cc7e6b;
+}
+
+.cards-grid > .category-card:nth-child(2):hover {
+  background-color: #e1b86d;
+}
+
+.cards-grid > .category-card:nth-child(3):hover {
+  background-color: #6b88b7;
+}
+
+.cards-grid > .category-card:nth-child(4):hover {
+  background-color: #b7c5c6;
+}
+
 .category-name {
   font-size: 18px;
   font-weight: 500;
