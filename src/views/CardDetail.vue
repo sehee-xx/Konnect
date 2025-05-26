@@ -1,8 +1,6 @@
 <template>
   <div>
     <LandingLoader v-if="loading" />
-    <Header />
-
     <div class="travel-detail-container" v-show="!loading">
       <!-- 1) 뒤로 가기 버튼 -->
       <div class="back-button">
@@ -381,7 +379,7 @@ export default {
         })),
         comments: (d.comments || []).map((c) => ({
           id: c.commentId,
-          username: c.userId,
+          username: c.userName,
           content: c.content,
           date: c.createdAt,
           isAuthor: c.userId === d.userInfo.userId,
@@ -389,7 +387,7 @@ export default {
           replies: Array.isArray(c.children)
             ? c.children.map((r) => ({
                 id: r.commentId,
-                username: r.userId,
+                username: r.userName,
                 content: r.content,
                 date: r.createdAt,
                 isAuthor: r.userId === d.userInfo.userId,
@@ -418,7 +416,7 @@ export default {
           return window.kakao.maps.load(res);
         const s = document.createElement("script");
         s.src =
-          "https://dapi.kakao.com/v2/maps/sdk.js?appkey=YOUR_APPKEY&libraries=services&autoload=false";
+          "https://dapi.kakao.com/v2/maps/sdk.js?appkey=73816551dd3f5b0dccade36971e6f556&libraries=services&autoload=false";
         s.onload = () => window.kakao.maps.load(res);
         s.onerror = rej;
         document.head.appendChild(s);
@@ -613,7 +611,7 @@ export default {
         });
         this.travelData.comments.push({
           id: created.commentId,
-          username: created.userId,
+          username: created.userName,
           content: created.content,
           date: created.createdAt,
           isAuthor: true,
@@ -651,7 +649,7 @@ export default {
         // 3) 올바른 필드로 새 reply 객체 생성
         const newReply = {
           id: child.commentId, // ← 여기를 child.commentId 로
-          username: child.userId, // ← 여기를 child.userId 로
+          username: child.userName, // ← 여기를 child.userName 로
           content: child.content, // ← content 도 마찬가지
           date: child.createdAt, // ← createdAt 도 읽어오기
           isAuthor: true,
@@ -916,10 +914,11 @@ export default {
   /* background: #ddd; */
   background: #333;
   color: #fff;
-  padding: 6px 12px;
-  border-radius: 20px;
+  padding: 8px 12px;
+  border-radius: 16px;
   cursor: pointer;
   transition: background 0.2s;
+  font-size: 12px;
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
