@@ -1,9 +1,10 @@
 <template>
   <div>
+    <LandingLoader v-if="loading" />
     <!-- 전역 헤더 -->
     <Header />
 
-    <div class="travel-detail-container">
+    <div class="travel-detail-container" v-show="!loading">
       <!-- 1) 뒤로 가기 버튼 -->
       <div class="back-button">
         <router-link to="/list">
@@ -226,12 +227,15 @@ import myPin from "../assets/map-pin.png";
 import emptyLikeImage from "../assets/empty-like.png";
 import likeImage from "../assets/like.png";
 import CloseIcon from "../assets/cancel.png";
+import LandingLoader from "../components/LandingLoader.vue";
+import { emitter } from "../plugins/emitter";
 
 export default {
   name: "TravelDetail",
-  components: { Header },
+  components: { Header, LandingLoader },
   data() {
     return {
+      loading: false,
       travelData: null,
       currentUser: "You",
       newComment: "",
@@ -253,6 +257,8 @@ export default {
   },
   async mounted() {
     const planId = this.$route.params.planId;
+    emitter.emit("start-loading");
+    this.loading = true;
     try {
       const { data: d } = await axios.get(`/api/v1/user/diaries/${planId}`);
       // 받은 raw JSON을 그대로 화면용 포맷으로 매핑
@@ -302,6 +308,10 @@ export default {
       this.liked = this.travelData.liked;
     } catch (err) {
       console.error("Failed to fetch diary detail:", err);
+    } finally {
+      // 3) 요청 완료 후, 로딩 끝 신호
+      emitter.emit("end-loading");
+      this.loading = false;
     }
 
     // 지도 초기화
