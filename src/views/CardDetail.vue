@@ -11,27 +11,24 @@
         </router-link>
       </div>
 
-      <!-- 3) Airbnb 스타일 사진 그리드 + 좋아요 버튼 -->
+      <!-- 3) 사진 그리드 -->
       <div v-if="travelData" class="image-gallery">
         <div class="photos-grid">
-          <div class="photo main" @click="openGallery(0)">
-            <img :src="travelData.detailImages[0]" alt="메인 이미지" />
-          </div>
           <div
-            v-for="(img, i) in travelData.detailImages.slice(1, 5)"
+            v-for="(img, i) in travelData.allImages.slice(0, 5)"
             :key="i"
-            class="photo sub"
-            @click="openGallery(i + 1)"
+            :class="['photo', i === 0 ? 'main' : 'sub']"
+            @click="openGallery(i)"
           >
-            <img :src="img" :alt="`서브 이미지 ${i + 1}`" />
-            <div v-if="i === 3" class="show-all" @click.stop="openGallery(0)">
+            <img :src="img" />
+            <div v-if="i === 4" class="show-all" @click.stop="openGallery(0)">
               <i class="fas fa-th"></i> View all
             </div>
           </div>
         </div>
       </div>
 
-      <!-- 4) 사진 투어 모달 -->
+      <!-- 4) 사진 모달 -->
       <div v-if="galleryOpened" class="gallery-modal">
         <div class="modal-header">
           <i class="fas fa-arrow-left back-icon" @click="closeGallery"></i>
@@ -46,7 +43,7 @@
         <div class="gallery-body">
           <div class="thumb-list">
             <div
-              v-for="(img, i) in travelData.detailImages"
+              v-for="(img, i) in travelData.allImages"
               :key="i"
               class="thumb"
               :class="{ active: i === currentSlide }"
@@ -56,7 +53,7 @@
             </div>
           </div>
           <div class="full-image">
-            <img :src="travelData.detailImages[currentSlide]" />
+            <img :src="travelData.allImages[currentSlide]" />
           </div>
         </div>
       </div>
@@ -224,7 +221,7 @@
 
 <script>
 import Header from "../components/Header.vue";
-import { destinations, topLovedPlans } from "../data";
+import axios from "axios";
 import myPin from "../assets/map-pin.png";
 import emptyLikeImage from "../assets/empty-like.png";
 import likeImage from "../assets/like.png";
@@ -246,6 +243,8 @@ export default {
       map: null,
       markers: [],
       polyline: null,
+      distanceOverlays: [],
+      numberOverlays: [],
       liked: false,
       emptyLikeImage,
       likeImage,
@@ -253,34 +252,78 @@ export default {
     };
   },
   async mounted() {
-    // travelData 설정
     const planId = this.$route.params.planId;
-    const all = [...topLovedPlans, ...destinations.flatMap((d) => d.plans)];
-    this.travelData = all.find((p) => String(p.id) === planId) || null;
-    if (this.travelData && !Array.isArray(this.travelData.comments)) {
-      this.travelData.comments = [];
+    try {
+      const { data: d } = await axios.get(`/api/v1/user/diaries/${planId}`);
+      // 받은 raw JSON을 그대로 화면용 포맷으로 매핑
+      this.travelData = {
+        id: d.id,
+        title: d.title,
+        author: d.userInfo.name,
+        dateRange: `${d.startDate.slice(0, 10).replace(/-/g, ".")} – ${d.endDate
+          .slice(0, 10)
+          .replace(/-/g, ".")}`,
+        thumbnail: d.thumbnail,
+        detailImages: d.images.length ? d.images : [d.thumbnail],
+        allImages: [d.thumbnail, ...d.images],
+        tags: d.tags.map((t) => t.nameEng),
+        liked: d.userLiked,
+        days: d.routes.map((r) => ({
+          date: r.date,
+          locations: r.items.map((item) => ({
+            time: item.visitedTime,
+            name: item.title,
+            description: "", // 기존에는 description이 없으니 빈 문자열
+            coordinates: {
+              lat: item.latitude,
+              lng: item.longitude,
+            },
+          })),
+          distances: r.items.slice(0, -1).map((item) => `${item.distance}m`),
+        })),
+        comments: (d.comments || []).map((c) => ({
+          id: c.commentId,
+          username: c.userId,
+          content: c.content,
+          date: c.createdAt,
+          replies: c.children
+            ? [
+                {
+                  id: c.children.commentId,
+                  username: c.children.userId,
+                  content: c.children.content,
+                  date: c.children.createdAt,
+                },
+              ]
+            : [],
+        })),
+      };
+      // API로 받은 like 상태 동기화
+      this.liked = this.travelData.liked;
+    } catch (err) {
+      console.error("Failed to fetch diary detail:", err);
     }
 
-    // 카카오 SDK 로드
+    // 지도 초기화
     await this.loadKakaoSdk();
     this.initMap();
     this.renderDayMap();
   },
   methods: {
     loadKakaoSdk() {
-      return new Promise((resolve, reject) => {
-        if (window.kakao && window.kakao.maps) {
-          return window.kakao.maps.load(resolve);
-        }
-        const script = document.createElement("script");
-        script.src =
-          "https://dapi.kakao.com/v2/maps/sdk.js?appkey=7aaa887ec557add13f538cd52bcbf830&libraries=services&autoload=false";
-        script.onload = () => window.kakao.maps.load(resolve);
-        script.onerror = reject;
-        document.head.appendChild(script);
+      return new Promise((res, rej) => {
+        if (window.kakao && window.kakao.maps)
+          return window.kakao.maps.load(res);
+        const s = document.createElement("script");
+        s.src =
+          "https://dapi.kakao.com/v2/maps/sdk.js?appkey=YOUR_APPKEY&libraries=services&autoload=false";
+        s.onload = () => window.kakao.maps.load(res);
+        s.onerror = rej;
+        document.head.appendChild(s);
       });
     },
     initMap() {
+      if (!this.travelData?.days?.length) return;
       const first = this.travelData.days[0].locations[0].coordinates;
       this.map = new kakao.maps.Map(document.getElementById("kakao-map"), {
         center: new kakao.maps.LatLng(first.lat, first.lng),
@@ -289,37 +332,32 @@ export default {
     },
     renderDayMap() {
       if (!this.map) return;
-
-      // 1) 기존 마커·라인·오버레이 모두 제거
+      // 기존 마커·라인 클리어
       this.markers.forEach((m) => m.setMap(null));
       this.markers = [];
       if (this.polyline) {
         this.polyline.setMap(null);
         this.polyline = null;
       }
-      (this.distanceOverlays || []).forEach((o) => o.setMap(null));
+      this.distanceOverlays.forEach((o) => o.setMap(null));
       this.distanceOverlays = [];
-      (this.numberOverlays || []).forEach((o) => o.setMap(null));
+      this.numberOverlays.forEach((o) => o.setMap(null));
       this.numberOverlays = [];
 
       const day = this.travelData.days[this.selectedDay];
       const bounds = new kakao.maps.LatLngBounds();
       const path = [];
-
-      // 2) 마커 이미지 준비
       const markerImage = new kakao.maps.MarkerImage(
         myPin,
         new kakao.maps.Size(40, 40),
         { offset: new kakao.maps.Point(15, 35) }
       );
 
-      // 3) 마커 생성 & 번호 오버레이
       day.locations.forEach((loc, idx) => {
         const pos = new kakao.maps.LatLng(
           loc.coordinates.lat,
           loc.coordinates.lng
         );
-
         const marker = new kakao.maps.Marker({
           position: pos,
           image: markerImage,
@@ -329,7 +367,7 @@ export default {
         bounds.extend(pos);
         path.push(pos);
 
-        const numOverlay = new kakao.maps.CustomOverlay({
+        const numOv = new kakao.maps.CustomOverlay({
           position: pos,
           content: `<div class="map-marker-label">${idx + 1}</div>`,
           xAnchor: 0.5,
@@ -337,7 +375,7 @@ export default {
           zIndex: 5,
           map: this.map,
         });
-        this.numberOverlays.push(numOverlay);
+        this.numberOverlays.push(numOv);
 
         kakao.maps.event.addListener(marker, "click", () => {
           const items = document.querySelectorAll(".route-item");
@@ -346,7 +384,6 @@ export default {
         });
       });
 
-      // 4) 폴리라인
       this.polyline = new kakao.maps.Polyline({
         path,
         strokeWeight: 4,
@@ -355,41 +392,40 @@ export default {
         map: this.map,
       });
 
-      // 5) 거리 오버레이
-      day.locations.slice(0, -1).forEach((loc, i) => {
+      day.locations.slice(0, -1).forEach((_, i) => {
         const next = day.locations[i + 1];
-        const midLat = (loc.coordinates.lat + next.coordinates.lat) / 2;
-        const midLng = (loc.coordinates.lng + next.coordinates.lng) / 2;
-        const distOverlay = new kakao.maps.CustomOverlay({
+        const midLat =
+          (day.locations[i].coordinates.lat + next.coordinates.lat) / 2;
+        const midLng =
+          (day.locations[i].coordinates.lng + next.coordinates.lng) / 2;
+        const distOv = new kakao.maps.CustomOverlay({
           position: new kakao.maps.LatLng(midLat, midLng),
           content: `<div class="distance-label">${day.distances[i]}</div>`,
           xAnchor: 0.5,
           yAnchor: 0.5,
           map: this.map,
         });
-        this.distanceOverlays.push(distOverlay);
+        this.distanceOverlays.push(distOv);
       });
 
-      // 6) 뷰 조정
       if (path.length === 1) {
-        // 한 곳만 있을 때
         this.map.setCenter(path[0]);
         this.map.setLevel(4);
       } else {
-        // 여러 개일 때: bounds 로 줌-투-핏 한 뒤, 정확히 중앙으로
         this.map.setBounds(bounds);
-        const ne = bounds.getNorthEast();
-        const sw = bounds.getSouthWest();
-        const centerLat = (ne.getLat() + sw.getLat()) / 2;
-        const centerLng = (ne.getLng() + sw.getLng()) / 2;
-        this.map.setCenter(new kakao.maps.LatLng(centerLat, centerLng));
+        const ne = bounds.getNorthEast(),
+          sw = bounds.getSouthWest();
+        this.map.setCenter(
+          new kakao.maps.LatLng(
+            (ne.getLat() + sw.getLat()) / 2,
+            (ne.getLng() + sw.getLng()) / 2
+          )
+        );
       }
-
-      // 7) flex 레이아웃 이슈 방지
       this.map.relayout();
     },
-    openGallery(idx) {
-      this.currentSlide = idx;
+    openGallery(i) {
+      this.currentSlide = i;
       this.galleryOpened = true;
       document.body.style.overflow = "hidden";
     },
@@ -400,9 +436,12 @@ export default {
     goToSlide(i) {
       this.currentSlide = i;
     },
-    selectDay(idx) {
-      this.selectedDay = idx;
+    selectDay(i) {
+      this.selectedDay = i;
       this.renderDayMap();
+    },
+    toggleLike() {
+      this.liked = !this.liked;
     },
     formatDate(d) {
       return new Date(d).toLocaleDateString("ko-KR", {
@@ -413,51 +452,42 @@ export default {
     },
     formatCommentDate(d) {
       const diff = Date.now() - new Date(d);
-      const mins = Math.floor(diff / 60000),
-        hrs = Math.floor(mins / 60),
-        days = Math.floor(hrs / 24);
-      if (mins < 60) return `${mins}분 전`;
-      if (hrs < 24) return `${hrs}시간 전`;
-      if (days < 7) return `${days}일 전`;
+      const m = Math.floor(diff / 60000),
+        h = Math.floor(m / 60),
+        D = Math.floor(h / 24);
+      if (m < 60) return `${m}분 전`;
+      if (h < 24) return `${h}시간 전`;
+      if (D < 7) return `${D}일 전`;
       return new Date(d).toLocaleDateString("ko-KR");
     },
-    // 1) 새 댓글 등록
     addComment() {
-      const content = this.newComment && this.newComment.trim();
-      if (!content) return;
+      const c = this.newComment.trim();
+      if (!c) return;
       this.travelData.comments.push({
-        id: Date.now(), // 임시 고유 ID
+        id: Date.now(),
         username: this.currentUser,
-        content,
-        date: new Date(),
+        content: c,
+        date: new Date().toISOString(),
         replies: [],
       });
       this.newComment = "";
     },
-
-    // 2) 답글 입력 폼 토글
-    showReplyForm(commentId) {
-      this.replyingTo = commentId;
+    showReplyForm(id) {
+      this.replyingTo = id;
       this.newReply = "";
     },
-
-    // 3) 선택된 댓글에 답글 등록
     addReply(parentId) {
-      const content = this.newReply && this.newReply.trim();
-      if (!content) return;
-      const parent = this.travelData.comments.find((c) => c.id === parentId);
-      if (!parent.replies) parent.replies = [];
+      const c = this.newReply.trim();
+      if (!c) return;
+      const parent = this.travelData.comments.find((x) => x.id === parentId);
       parent.replies.push({
         id: Date.now(),
         username: this.currentUser,
-        content,
-        date: new Date(),
+        content: c,
+        date: new Date().toISOString(),
       });
-      this.newReply = "";
       this.replyingTo = null;
-    },
-    toggleLike() {
-      this.liked = !this.liked;
+      this.newReply = "";
     },
   },
 };
@@ -824,7 +854,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 14px;
+  height: 12px;
   border-radius: 50%;
   background: #c2372f;
   color: #fff;

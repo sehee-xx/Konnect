@@ -73,6 +73,11 @@ function goDetail(plan) {
   transition: transform 0.3s ease;
 }
 
+.card-link {
+  text-decoration: none;
+  color: inherit;
+}
+
 .overlay {
   border-radius: 16px;
   position: absolute;
@@ -124,6 +129,8 @@ function goDetail(plan) {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  text-decoration: none; /* 밑줄 제거 */
+  color: inherit; /* 부모 요소 색상 상속 */
 }
 
 .info-row {
