@@ -18,7 +18,7 @@
               <div class="status-indicator"></div>
             </div>
             <div class="user-info">
-              <h3>Hello, {{ user.name }}!</h3>
+              <h3>Hello, {{ userInfo.name }}!</h3>
               <div class="user-role">
                 <svg
                   width="16"
@@ -567,6 +567,13 @@ import { auth } from "../stores/auth";
 import { useUserPlans } from "../stores/userPlans";
 import LandingLoader from "../components/LandingLoader.vue";
 import { emitter } from "../plugins/emitter";
+import client from "../api/client";
+import { reactive } from "vue";
+
+const userInfo = reactive({
+  name: "",
+  email: "",
+});
 
 // 디버깅용 상태
 const showDebug = ref(false);
@@ -575,7 +582,7 @@ const publishing = ref(false);
 
 // 사용자 정보
 const user = computed(() => ({
-  name: auth.user?.name || "홍길동",
+  name: auth.user?.name || "Sehee",
   email: auth.user?.email || "",
 }));
 const avatarUrl = computed(() => auth.user?.avatarUrl || defaultAvatar);
@@ -658,6 +665,11 @@ onMounted(async () => {
   try {
     emitter.emit("start-loading");
     loading.value = true;
+
+    const { data } = await client.get("/api/v1/user/users/me");
+    userInfo.name = data.name;
+    userInfo.email = data.email;
+
     await userPlans.loadAllPlans();
     // 디버깅용 콘솔 로그
     console.log("=== Dashboard Debug Info ===");
