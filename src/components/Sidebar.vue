@@ -79,7 +79,7 @@
 
 <style scoped>
 .sidebar {
-  width: 240px;
+  width: 180px;
   height: 100vh;
   padding: 24px 16px;
   box-sizing: border-box;

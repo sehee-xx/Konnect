@@ -8,12 +8,17 @@
         <header class="dashboard__header">
           <div class="welcome">
             <div class="avatar-container">
-              <img :src="avatarUrl" alt="Avatar" class="avatar" />
+              <img
+                :src="avatarUrl"
+                alt="Avatar"
+                class="avatar"
+                loading="lazy"
+              />
               <div class="status-indicator"></div>
             </div>
             <div class="user-info">
-              <h2>Hello, {{ user.name }}!</h2>
-              <span class="user-role">
+              <h3>Hello, {{ user.name }}!</h3>
+              <div class="user-role">
                 <svg
                   width="16"
                   height="16"
@@ -27,7 +32,7 @@
                   />
                 </svg>
                 Premium Traveller
-              </span>
+              </div>
             </div>
           </div>
           <div class="header-actions">
@@ -211,6 +216,7 @@
                     <img
                       :src="plan.thumbnail || defaultAvatar"
                       alt="thumbnail"
+                      loading="lazy"
                     />
                     <div class="card-overlay">
                       <div class="status-chip editing">
@@ -283,7 +289,8 @@
                           stroke-width="2"
                         />
                       </svg>
-                      {{ plan.startDate }} ~ {{ plan.endDate }}
+                      {{ formatDate(plan.startDate) }} ~
+                      {{ formatDate(plan.endDate) }}
                     </p>
                     <button
                       class="btn-complete"
@@ -412,6 +419,7 @@
                     <img
                       :src="plan.thumbnail || defaultAvatar"
                       alt="thumbnail"
+                      loading="lazy"
                     />
                     <div class="card-overlay">
                       <div class="status-chip completed">
@@ -477,8 +485,47 @@
                           stroke-width="2"
                         />
                       </svg>
-                      {{ plan.startDate }} ~ {{ plan.endDate }}
+                      {{ formatDate(plan.startDate) }} ~
+                      {{ formatDate(plan.endDate) }}
                     </p>
+                    <div class="trip-summary">
+                      <div class="summary-item">
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                        >
+                          <path
+                            d="M21 10C21 17 12 23 12 23S3 17 3 10C3 5.02944 7.02944 1 12 1C16.9706 1 21 5.02944 21 10Z"
+                            stroke="currentColor"
+                            stroke-width="2"
+                          />
+                          <circle
+                            cx="12"
+                            cy="10"
+                            r="3"
+                            stroke="currentColor"
+                            stroke-width="2"
+                          />
+                        </svg>
+                        <span>{{ plan.locations?.length || 0 }} places</span>
+                      </div>
+                      <div class="summary-item">
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                        >
+                          <path
+                            d="M12 2L15.09 8.26L22 9L17 14L18.18 21L12 17.77L5.82 21L7 14L2 9L8.91 8.26L12 2Z"
+                            fill="currentColor"
+                          />
+                        </svg>
+                        <span>{{ plan.rating || "Unrated" }}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -514,7 +561,7 @@
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import Sidebar from "../components/Sidebar.vue";
-import defaultAvatar from "../assets/defaultImg.png";
+import defaultAvatar from "../assets/defaultAvatar.png";
 import { auth } from "../stores/auth";
 import { useUserPlans } from "../stores/userPlans";
 
@@ -556,6 +603,15 @@ const completedTrips = computed(() =>
   })
 );
 
+function formatDate(dateString) {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  const year = date.getFullYear().toString().slice(-2); // 마지막 2자리만
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const day = date.getDate().toString().padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 // 라우터
 const router = useRouter();
 function goDetail(id) {
@@ -571,17 +627,26 @@ function toggleDebug() {
   showDebug.value = !showDebug.value;
 }
 
-// 여행 완료하기
 async function completePlan(diaryId) {
   if (publishing.value) return;
   publishing.value = true;
-  try {
-    await userPlans.publishDiary(diaryId);
-    console.log(`Successfully published diary ${diaryId}`);
-  } catch (error) {
-  } finally {
-    publishing.value = false;
+
+  // 1) 화면에 즉시 반영 (Optimistic UI)
+  const idx = userPlans.plans.findIndex((p) => p.diaryId === diaryId);
+  if (idx !== -1) {
+    userPlans.plans[idx].status = "published";
   }
+
+  // 2) 실제 API 호출은 백그라운드에서 수행
+  userPlans
+    .publishDiary(diaryId)
+    .catch(() => {
+      // 실패 시 원복
+      if (idx !== -1) userPlans.plans[idx].status = "editing";
+    })
+    .finally(() => {
+      publishing.value = false;
+    });
 }
 
 // 진입 시 서버에서 플랜 불러오기
@@ -648,9 +713,9 @@ body {
 .container {
   width: 100%;
   min-height: 100vh;
-  max-width: 1200px;
+  max-width: 1260px;
   margin: 0 auto;
-  padding-top: 80px;
+  padding: 80px 24px 20px 24px;
 }
 
 .dashboard {
@@ -664,7 +729,7 @@ body {
   width: 100%;
   max-width: calc(100vw - 280px); /* 사이드바 너비 고려 */
   padding: 20px 32px;
-  overflow-x: hidden;
+  overflow-x: visible;
 }
 
 /* 헤더 */
@@ -672,12 +737,11 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 0 0 32px 0;
+  margin: 0 0 20px 0;
   background: white;
   border-radius: 16px;
-  padding: 24px 32px;
+  padding: 18px 20px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e2e8f0;
   width: 100%;
 }
 
@@ -732,7 +796,10 @@ body {
 
 .user-info {
   flex: 1;
+  display: flex;
+  flex-direction: column;
   min-width: 0;
+  gap: 5px;
 }
 
 .user-info h2 {
@@ -746,11 +813,12 @@ body {
 }
 
 .user-role {
-  font-size: 1rem;
+  font-size: 0.8rem;
   color: #64748b;
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 8px;
+  gap: 5px;
   font-weight: 500;
 }
 
@@ -769,7 +837,7 @@ body {
 .btn-create {
   background: #c2372e;
   color: white;
-  padding: 14px 28px;
+  padding: 12px 18px;
   border: none;
   border-radius: 12px;
   font-weight: 600;
@@ -778,7 +846,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 1rem;
+  font-size: 0.8rem;
   white-space: nowrap;
 }
 
@@ -812,19 +880,18 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 24px;
-  margin-bottom: 32px;
+  margin-bottom: 20px;
   width: 100%;
 }
 
 .stat-card {
   background: white;
   border-radius: 16px;
-  padding: 24px;
+  padding: 12px;
   display: flex;
   align-items: center;
   gap: 16px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e2e8f0;
   transition: all 0.3s ease;
   min-width: 0;
 }
@@ -835,9 +902,9 @@ body {
 }
 
 .stat-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -858,19 +925,22 @@ body {
 }
 
 .stat-content {
-  flex: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 5px;
   min-width: 0;
 }
 
 .stat-content h3 {
   margin: 0;
-  font-size: 2rem;
   font-weight: 700;
   color: #1f2937;
 }
 
 .stat-content p {
   margin: 0;
+  font-size: 14px;
   color: #6b7280;
   font-weight: 500;
 }
@@ -910,11 +980,34 @@ body {
   flex-wrap: wrap;
 }
 
+.trip-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0;
+  flex: 1;
+}
+
 .summary-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: #64748b;
   font-weight: 500;
+}
+
+.summary-item svg {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.summary-item:first-child svg {
+  color: #ef4444;
+}
+
+.summary-item:last-child svg {
+  color: #f59e0b;
 }
 
 .badge {
@@ -931,29 +1024,28 @@ body {
   display: grid;
   grid-template-columns: 1fr;
   gap: 32px;
-  padding-bottom: 60px;
   width: 100%;
 }
 
 /* 위젯 공통 */
 .widget {
+  max-width: 100%;
+  overflow: hidden;
   background: rgba(255, 255, 255, 0.95);
-  border-radius: 24px;
-  padding: 32px;
+  border-radius: 16px;
   box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   transition: all 0.3s ease;
   width: 100%;
-  overflow: hidden;
+  padding: 20px;
 }
 
 .widget:hover {
   transform: translateY(-5px);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.15);
 }
 
 .widget-header {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .widget-title-container {
@@ -964,8 +1056,8 @@ body {
 }
 
 .widget-icon {
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -981,7 +1073,7 @@ body {
 
 .widget-title {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: #1f2937;
   display: flex;
@@ -1011,13 +1103,14 @@ body {
   font-weight: 500;
 }
 
-/* 캐러셀 */
 .carousel-wrapper {
   position: relative;
   display: flex;
   align-items: center;
   width: 100%;
-  overflow: hidden;
+  overflow: visible;
+  padding: 20px 0px;
+  margin: 0;
 }
 
 .carousel {
@@ -1025,11 +1118,12 @@ body {
   overflow-x: auto;
   gap: 24px;
   scroll-behavior: smooth;
-  padding: 16px 0;
   flex: 1;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  min-height: 320px;
+  min-height: fit-content;
+  padding: 0;
+  margin: 0;
 }
 
 .carousel::-webkit-scrollbar {
@@ -1037,37 +1131,50 @@ body {
 }
 
 .arrow {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
+  background: linear-gradient(135deg, #ffffff, #f8fafc);
+  backdrop-filter: blur(16px);
+  border: 2px solid rgba(0, 0, 0, 0.05);
+  width: 36px;
+  height: 36px;
+  border-radius: 5px;
   cursor: pointer;
-  z-index: 2;
-  transition: all 0.3s ease;
+  z-index: 100 !important;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #374151;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  color: #1f2937;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.04);
   flex-shrink: 0;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .arrow:hover {
-  background: white;
+  background: linear-gradient(135deg, #ffffff, #ffffff);
+  transform: translateY(-50%) scale(1.05);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12), 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.arrow:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.arrow svg {
+  transition: transform 0.3s ease;
+}
+
+.arrow:hover svg {
   transform: scale(1.1);
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
 }
 
 .arrow.left {
-  position: absolute;
-  left: -24px;
+  left: -28px; /* 기존 left: 0에서 변경 */
 }
 
 .arrow.right {
-  position: absolute;
-  right: -24px;
+  right: -28px; /* 기존 right: 0에서 변경 */
 }
 
 /* Empty State */
@@ -1090,7 +1197,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   background: linear-gradient(135deg, #f59e0b, #f97316);
   color: white;
 }
@@ -1114,27 +1221,32 @@ body {
 
 /* 카드 */
 .trip-card {
-  min-width: 280px;
-  max-width: 320px;
-  background: rgba(255, 255, 255, 0.9);
+  width: 200px;
+  height: 310px;
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
-  border-radius: 20px;
+  border-radius: 16px; /* 기존 20px에서 약간 줄여서 더 깔끔하게 */
   overflow: hidden;
   cursor: pointer;
-  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 8px 12px rgba(0, 0, 0, 0.12);
+  margin-bottom: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
   transition: all 0.3s ease;
   flex-shrink: 0;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+  transform-origin: bottom center;
 }
 
 .trip-card:hover {
+  z-index: 10;
   transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.2);
 }
 
 .card-image {
   position: relative;
-  height: 160px;
+  height: 140px; /* 기존 100px에서 10px 증가 */
   overflow: hidden;
 }
 
@@ -1158,76 +1270,101 @@ body {
   display: flex;
   align-items: flex-start;
   justify-content: flex-end;
-  padding: 16px;
+  padding: 12px;
 }
 
 .status-chip {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 0.8rem;
+  padding: 6px 10px;
+  border-radius: 16px;
+  font-size: 0.75rem;
   font-weight: 600;
   text-transform: capitalize;
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .status-chip.editing {
-  background: rgba(245, 158, 11, 0.9);
+  background: rgba(245, 158, 11, 0.95);
   color: white;
 }
 
 .status-chip.completed {
-  background: rgba(16, 185, 129, 0.9);
+  background: rgba(16, 185, 129, 0.95);
   color: white;
 }
 
 .card-content {
-  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 14px; /* 기존 16px에서 14px로 조정 */
+  height: calc(310px - 140px);
+  overflow: hidden;
+  background-color: #f7f8f9;
 }
 
 .card-content h4 {
-  margin: 0 0 8px 0;
-  font-size: 1.1rem;
+  font-size: 1.05rem; /* 기존 1.1rem에서 약간 줄임 */
   font-weight: 600;
-  color: #1f2937;
   line-height: 1.3;
+  margin: 0 0 8px 0;
+  color: #1f2937;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
   word-break: break-word;
+  min-height: 2.6em; /* 2줄 고정 높이 확보 */
 }
 
 .date-range {
-  margin: 0 0 16px 0;
-  font-size: 0.9rem;
-  color: #6b7280;
+  margin: 0 0 12px 0;
+  font-size: 0.8rem;
+  color: #64748b;
   display: flex;
   align-items: center;
   gap: 6px;
   font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap; /* 추가: 한줄 유지 */
+  overflow: hidden; /* 추가: 넘치는 부분 숨김 */
+  text-overflow: ellipsis; /* 추가: ... 표시 */
+}
+
+.date-range svg {
+  flex-shrink: 0; /* 아이콘 크기 고정 */
+  color: #94a3b8;
 }
 
 .btn-complete {
   width: 100%;
-  padding: 12px 16px;
+  padding: 10px 12px;
   background: linear-gradient(135deg, #10b981, #34d399);
   color: white;
   border: none;
-  border-radius: 12px;
-  font-size: 0.9rem;
+  border-radius: 10px;
+  font-size: 0.85rem; /* 기존 0.9rem에서 약간 줄임 */
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+  gap: 6px;
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.25);
+  flex-shrink: 0;
+  min-height: 34px;
 }
 
 .btn-complete:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.35);
+  background: linear-gradient(135deg, #059669, #10b981);
 }
 
 .btn-complete:disabled {
@@ -1238,8 +1375,8 @@ body {
 }
 
 .spinner {
-  width: 16px;
-  height: 16px;
+  width: 14px; /* 기존 16px에서 줄임 */
+  height: 14px;
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-top: 2px solid white;
   border-radius: 50%;
@@ -1264,12 +1401,13 @@ body {
 
   .dashboard__header {
     padding: 20px 24px;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
   }
 
   .stats-grid {
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 16px;
+    margin-bottom: 20px;
   }
 
   .trip-card {
