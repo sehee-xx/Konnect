@@ -1,9 +1,10 @@
 <template>
   <div class="container">
+    <LandingLoader v-if="loading" />
     <div class="dashboard">
       <Sidebar />
 
-      <div class="dashboard__main">
+      <div class="dashboard__main" v-show="!loading">
         <!-- Modern Header with Gradient Background -->
         <header class="dashboard__header">
           <div class="welcome">
@@ -564,9 +565,12 @@ import Sidebar from "../components/Sidebar.vue";
 import defaultAvatar from "../assets/defaultAvatar.png";
 import { auth } from "../stores/auth";
 import { useUserPlans } from "../stores/userPlans";
+import LandingLoader from "../components/LandingLoader.vue";
+import { emitter } from "../plugins/emitter";
 
 // 디버깅용 상태
 const showDebug = ref(false);
+const loading = ref(false);
 const publishing = ref(false);
 
 // 사용자 정보
@@ -652,6 +656,8 @@ async function completePlan(diaryId) {
 // 진입 시 서버에서 플랜 불러오기
 onMounted(async () => {
   try {
+    emitter.emit("start-loading");
+    loading.value = true;
     await userPlans.loadAllPlans();
     // 디버깅용 콘솔 로그
     console.log("=== Dashboard Debug Info ===");
@@ -681,6 +687,9 @@ onMounted(async () => {
     console.log("Status groups:", statusGroups);
   } catch (error) {
     console.error("Failed to load plans:", error);
+  } finally {
+    emitter.emit("end-loading");
+    loading.value = false;
   }
 });
 
