@@ -1,6 +1,7 @@
 // src/stores/userPlans.js
 import { defineStore } from "pinia";
 import axios from "axios";
+import { emitter } from "../plugins/emitter";
 
 export const useUserPlans = defineStore("userPlans", {
   state: () => ({
@@ -20,6 +21,7 @@ export const useUserPlans = defineStore("userPlans", {
   actions: {
     // 1) 백엔드 기본 다이어리 조회 (기본 필터는 백엔드가 결정)
     async loadAllPlans() {
+      emitter.emit("start-loading");
       this.loading = true;
       this.error = null;
       try {
@@ -31,11 +33,13 @@ export const useUserPlans = defineStore("userPlans", {
         throw err;
       } finally {
         this.loading = false;
+        emitter.emit("end-loading");
       }
     },
 
     // 2) 특정 상태의 다이어리만 조회 (여기서는 editing + published)
     async loadPlans(statusList = ["editing", "published"]) {
+      emitter.emit("start-loading");
       this.loading = true;
       this.error = null;
       try {
@@ -48,11 +52,13 @@ export const useUserPlans = defineStore("userPlans", {
         throw err;
       } finally {
         this.loading = false;
+        emitter.emit("end-loading");
       }
     },
 
     // 3) 다이어리 상태를 published로 변경
     async publishDiary(diaryId) {
+      emitter.emit("start-loading");
       this.loading = true;
       this.error = null;
       try {
@@ -111,6 +117,7 @@ export const useUserPlans = defineStore("userPlans", {
         throw err;
       } finally {
         this.loading = false;
+        emitter.emit("end-loading");
       }
     },
 
@@ -128,6 +135,7 @@ export const useUserPlans = defineStore("userPlans", {
 
     // 5) 다이어리 생성
     async createPlan(formData) {
+      emitter.emit("start-loading");
       this.loading = true;
       this.error = null;
       try {
@@ -141,11 +149,14 @@ export const useUserPlans = defineStore("userPlans", {
         throw err;
       } finally {
         this.loading = false;
+        emitter.emit("end-loading");
       }
     },
 
     // 6) 다이어리 업데이트
     async updatePlan(diaryId, planData) {
+      emitter.emit("start-loading");
+      this.loading = true;
       try {
         const fd = new FormData();
         fd.append(
@@ -171,11 +182,15 @@ export const useUserPlans = defineStore("userPlans", {
         this.error = error.message;
         console.error("Failed to update plan:", error);
         throw error;
+      } finally {
+        this.loading = false;
+        emitter.emit("end-loading");
       }
     },
 
     // 7) 다이어리 삭제
     async deletePlan(diaryId) {
+      emitter.emit("start-loading");
       this.loading = true;
       this.error = null;
       try {
@@ -187,6 +202,7 @@ export const useUserPlans = defineStore("userPlans", {
         throw err;
       } finally {
         this.loading = false;
+        emitter.emit("end-loading");
       }
     },
   },
