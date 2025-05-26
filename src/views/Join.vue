@@ -153,31 +153,55 @@ function handleSwitch() {
 // 1) Social Login
 function socialLogin(provider) {
   window.location.href = `http://20.200.137.41:8080/oauth2/authorization/${provider}`;
-  document.cookie = `OAUTH2_REDIRECT_URI=${encodeURIComponent(
-    redirectUrl
-  )}; path=/`;
 }
 
 // 2) Email/Password Login
 async function handleLogin() {
   try {
-    const { data } = await client.post("/api/v1/all/auth/login", {
+    // 1) 서버에 로그인 요청
+    const res = await client.post("/api/v1/all/auth/login", {
       email: loginEmail.value,
       password: loginPassword.value,
     });
+
+    // 2) 응답 헤더에서 Authorization 꺼내기
+    let headerToken =
+      res.headers.authorization || res.headers["Authorization"] || "";
+
+    if (!headerToken) {
+      throw new Error("서버가 Authorization 헤더를 보내지 않았습니다.");
+    }
+
+    // // 만약 'Bearer ' 접두사가 없다면 붙여 주기
+    // if (!/^Bearer /i.test(headerToken)) {
+    //   headerToken = `Bearer ${headerToken}`;
+    // }
+
+    // 3) body 에서 user 정보 꺼내기
+    const payload = res.data.data ?? res.data;
     const userInfo = {
-      name: data.username,
-      email: data.email,
+      name: payload.user?.username ?? payload.username,
+      email: payload.user?.email ?? payload.email,
     };
-    auth.login(userInfo);
-    emit("login", userInfo);
+
+    // (디버깅) 실제로 끌어온 토큰 & user 정보
+    console.log("🚀 headerToken:", headerToken);
+    console.log("🚀 userInfo:", userInfo);
+
+    // 4) 스토어에 로그인 처리 (token + user 저장, localStorage.setItem, axios 기본 헤더 세팅까지)
+    auth.login(userInfo, headerToken);
+
+    // 5) client 인스턴스에도 헤더 붙여 두기 (auth.ts 에서는 글로벌 axios 에만 붙이므로)
+    client.defaults.headers.common["Authorization"] = headerToken;
+
+    // 6) 로그인 성공 후 페이지 이동
     router.push("/List");
   } catch (err) {
     console.error("Login failed:", err);
     await Swal.fire({
       icon: "error",
-      title: "Login Failed",
-      text: "Unable to log in. Please check your credentials and try again.",
+      title: "로그인 실패",
+      text: "아이디/비밀번호를 확인하고 다시 시도해주세요.",
     });
   }
 }

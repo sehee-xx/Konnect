@@ -33,6 +33,10 @@ import { useRouter } from "vue-router";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.css";
 
+// 아래 두 줄을 추가하세요
+import { auth } from "../stores/auth";
+import client from "../api/client";
+
 const props = defineProps({
   isLoggedIn: { type: Boolean, required: true },
 });
@@ -78,10 +82,20 @@ function goMypage() {
 function onSearch() {
   router.push({ name: "List", query: { ...search.value } });
 }
+
+// --------------- 수정된 onLogout ---------------
 function onLogout() {
-  emit("logout");
+  // 1) auth 상태 초기화
+  auth.logout();
+  // 2) 저장된 토큰/유저 정보 제거
+  localStorage.removeItem("auth");
+  // 3) axios 기본 헤더에서 Authorization 삭제
+  delete client.defaults.headers.common["Authorization"];
+  // 4) 메뉴 닫고, 상위 컴포넌트에도 logout 이벤트 전달
   showProfileMenu.value = false;
   router.push("/Join");
+  emit("logout");
+  // 5) 회원가입/로그인 페이지로 이동
 }
 </script>
 
