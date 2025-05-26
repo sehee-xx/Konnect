@@ -12,15 +12,15 @@
           <div class="form__icons">
             <img
               class="form__icon"
-              src="../assets/login-google.png"
-              alt="Google"
-              @click="socialLogin('google')"
-            />
-            <img
-              class="form__icon"
               src="../assets/login-kakao.png"
               alt="Kakao"
               @click="socialLogin('kakao')"
+            />
+             <img
+              class="form__icon"
+              src="../assets/login-google.png"
+              alt="Google"
+              @click="socialLogin('google')"
             />
             <img
               class="form__icon"
