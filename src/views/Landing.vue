@@ -108,7 +108,7 @@ const page2Items = [
 ];
 const cardRefs = ref([]);
 let animationFrame,
-  rotationSpeed = 1.0,
+  rotationSpeed = 0.5,
   currentRotation = 0;
 
 onMounted(() => {
