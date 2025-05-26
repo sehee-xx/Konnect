@@ -1,7 +1,6 @@
 <template>
   <div>
     <LandingLoader v-if="loading" />
-    <!-- 전역 헤더 -->
     <Header />
 
     <div class="travel-detail-container" v-show="!loading">
@@ -95,9 +94,8 @@
         </button>
       </div>
 
-      <!-- 8~9) 일정과 지도를 flex 컨테이너로 묶기 -->
+      <!-- 8~9) 일정 & 지도 -->
       <div v-if="travelData" class="plan-map-wrapper">
-        <!-- 일정 -->
         <div class="routes-container">
           <h2>My Plan - Day {{ selectedDay + 1 }}</h2>
           <div class="day-container">
@@ -131,8 +129,6 @@
             </div>
           </div>
         </div>
-
-        <!-- 지도 -->
         <div class="map-container">
           <h2>Map - Day {{ selectedDay + 1 }}</h2>
           <div id="kakao-map" class="kakao-map"></div>
@@ -143,7 +139,15 @@
       <div v-if="travelData" class="comments-list">
         <div class="comments-section-header">
           <h2>Comments</h2>
-          <span class="comments-count">{{ travelData.comments.length }}</span>
+          <span class="comments-count"
+            >{{
+              // 댓글 개수 + 모든 대댓글 개수
+              travelData.comments.reduce(
+                (sum, c) => sum + 1 + c.replies.length,
+                0
+              )
+            }}
+          </span>
         </div>
 
         <!-- 댓글 작성 폼 -->
@@ -164,6 +168,7 @@
 
         <!-- 댓글 + 답글 리스트 -->
         <div v-for="c in travelData.comments" :key="c.id" class="comment">
+          <!-- 댓글 헤더 -->
           <div class="comment-header">
             <div class="comment-info">
               <div class="column-box">
@@ -171,29 +176,62 @@
                   {{ c.username }}
                   <span v-if="c.isAuthor" class="author-badge">Author</span>
                 </div>
-                <div class="comment-date">
-                  {{ formatCommentDate(c.date) }}
-                </div>
+                <div class="comment-date">{{ formatCommentDate(c.date) }}</div>
               </div>
-              <div class="comment-content">{{ c.content }}</div>
             </div>
           </div>
 
-          <!-- 답글 버튼 -->
+          <!-- 댓글 내용 읽기/편집 분기 -->
+          <div
+            v-if="editingCommentId !== c.id || editingIsReply"
+            class="comment-content"
+          >
+            {{ c.content }}
+          </div>
+          <div v-else class="comment-editing">
+            <textarea
+              v-model="editingContent"
+              class="comment-edit-textarea"
+              rows="3"
+            ></textarea>
+            <div class="comment-form-actions">
+              <button class="comment-submit-btn" @click="saveEdit(false)">
+                Save
+              </button>
+              <button class="comment-cancel-btn" @click="cancelEdit">
+                Cancel
+              </button>
+            </div>
+          </div>
+
+          <!-- 댓글 액션 -->
           <div class="comment-actions">
             <div class="comment-action" @click="showReplyForm(c.id)">
               <i class="far fa-comment"></i>
               <span>Reply</span>
             </div>
+            <div
+              v-if="c.isAuthor"
+              class="comment-action"
+              @click="startEdit(c.id, c.content, false)"
+            >
+              Edit
+            </div>
+            <div
+              v-if="c.isAuthor"
+              class="comment-action"
+              @click="deleteComment(c.id)"
+            >
+              Delete
+            </div>
           </div>
 
-          <!-- 답글 입력폼 (v-for 내부) -->
+          <!-- 답글 입력폼 -->
           <div v-if="replyingTo === c.id" class="comment-form reply-form">
             <textarea
               v-model="newReply"
               placeholder="Write a reply…"
               rows="2"
-              class="reply-textarea"
             ></textarea>
             <div class="comment-form-actions">
               <button class="comment-submit-btn" @click="addReply(c.id)">
@@ -202,16 +240,53 @@
             </div>
           </div>
 
-          <!-- 기존 대댓글 -->
-          <div v-if="c.replies?.length" class="replies">
-            <div v-for="r in c.replies" :key="r.id" class="reply">
-              <div class="reply-header">
-                <div class="reply-username">{{ r.username }}</div>
-                <div class="reply-date">
-                  {{ formatCommentDate(r.date) }}
-                </div>
+          <!-- 대댓글 리스트 -->
+          <div v-for="r in c.replies" :key="r.id" class="replies">
+            <!-- 대댓글 헤더 -->
+            <div class="reply-header">
+              <div class="reply-username">{{ r.username }}</div>
+              <div class="reply-date">{{ formatCommentDate(r.date) }}</div>
+            </div>
+
+            <!-- 대댓글 내용 읽기/편집 분기 -->
+            <div
+              v-if="editingCommentId !== r.id || !editingIsReply"
+              class="reply-content"
+            >
+              {{ r.content }}
+            </div>
+            <div v-else class="reply-editing">
+              <textarea
+                v-model="editingContent"
+                class="reply-edit-textarea"
+                rows="2"
+              ></textarea>
+              <div class="comment-form-actions">
+                <button class="comment-submit-btn" @click="saveEdit(true)">
+                  Save
+                </button>
+                <button class="comment-cancel-btn" @click="cancelEdit">
+                  Cancel
+                </button>
               </div>
-              <div class="reply-content">{{ r.content }}</div>
+            </div>
+
+            <!-- 대댓글 액션 -->
+            <div class="comment-actions">
+              <div
+                v-if="r.isAuthor"
+                class="comment-action"
+                @click="startEdit(r.id, r.content, true, c.id)"
+              >
+                Edit
+              </div>
+              <div
+                v-if="r.isAuthor"
+                class="comment-action"
+                @click="deleteComment(r.id, true, c.id)"
+              >
+                Delete
+              </div>
             </div>
           </div>
         </div>
@@ -222,12 +297,12 @@
 
 <script>
 import Header from "../components/Header.vue";
-import axios from "axios";
+import LandingLoader from "../components/LandingLoader.vue";
+import client from "../api/client";
 import myPin from "../assets/map-pin.png";
 import emptyLikeImage from "../assets/empty-like.png";
 import likeImage from "../assets/like.png";
 import CloseIcon from "../assets/cancel.png";
-import LandingLoader from "../components/LandingLoader.vue";
 import { emitter } from "../plugins/emitter";
 
 export default {
@@ -237,10 +312,9 @@ export default {
     return {
       loading: false,
       travelData: null,
-      currentUser: "You",
       newComment: "",
-      replyingTo: null,
       newReply: "",
+      replyingTo: null,
       galleryOpened: false,
       currentSlide: 0,
       selectedDay: 0,
@@ -253,63 +327,80 @@ export default {
       emptyLikeImage,
       likeImage,
       CloseIcon,
+      // 편집용 상태
+      editingCommentId: null,
+      editingContent: "",
+      editingIsReply: false,
+      editingParentId: null,
     };
   },
   async mounted() {
     const planId = this.$route.params.planId;
     emitter.emit("start-loading");
     this.loading = true;
+
     try {
-      const { data: d } = await axios.get(`/api/v1/user/diaries/${planId}`);
-      // 받은 raw JSON을 그대로 화면용 포맷으로 매핑
+      // ── 1) localStorage 에서 auth 꺼내오기 & token 파싱
+      const saved = localStorage.getItem("auth");
+      let bearer = "";
+      if (saved) {
+        const { token } = JSON.parse(saved);
+        bearer = token; // 이미 "Bearer xxx" 형태로 저장해 두셨다면 그대로 사용
+      }
+
+      // ── 2) axios 인스턴스 기본 헤더에도 설정해 두면 이후 매번 안 붙여줘도 됩니다
+      if (bearer) {
+        client.defaults.headers.common["Authorization"] = bearer;
+      }
+
+      // ── 3) detail API 호출 (헤더는 client.defaults 에 들어있으므로 따로 안 넣어도 OK)
+      const { data: d } = await client.get(`/api/v1/user/diaries/${planId}`);
+
+      // ── 4) 받은 데이터 매핑
       this.travelData = {
         id: d.id,
         title: d.title,
         author: d.userInfo.name,
-        dateRange: `${d.startDate.slice(0, 10).replace(/-/g, ".")} – ${d.endDate
-          .slice(0, 10)
-          .replace(/-/g, ".")}`,
+        dateRange:
+          d.startDate.slice(0, 10).replace(/-/g, ".") +
+          " – " +
+          d.endDate.slice(0, 10).replace(/-/g, "."),
         thumbnail: d.thumbnail,
-        detailImages: d.images.length ? d.images : [d.thumbnail],
         allImages: [d.thumbnail, ...d.images],
         tags: d.tags.map((t) => t.nameEng),
         liked: d.userLiked,
         days: d.routes.map((r) => ({
           date: r.date,
-          locations: r.items.map((item) => ({
-            time: item.visitedTime,
-            name: item.title,
-            description: "", // 기존에는 description이 없으니 빈 문자열
-            coordinates: {
-              lat: item.latitude,
-              lng: item.longitude,
-            },
+          locations: r.items.map((it) => ({
+            time: it.visitedTime,
+            name: it.title,
+            description: "",
+            coordinates: { lat: it.latitude, lng: it.longitude },
           })),
-          distances: r.items.slice(0, -1).map((item) => `${item.distance}m`),
+          distances: r.items.slice(0, -1).map((it) => `${it.distance}m`),
         })),
         comments: (d.comments || []).map((c) => ({
           id: c.commentId,
           username: c.userId,
           content: c.content,
           date: c.createdAt,
-          replies: c.children
-            ? [
-                {
-                  id: c.children.commentId,
-                  username: c.children.userId,
-                  content: c.children.content,
-                  date: c.children.createdAt,
-                },
-              ]
+          isAuthor: c.userId === d.userInfo.userId,
+          // children 이 배열이라면 map, 아니면 빈 배열
+          replies: Array.isArray(c.children)
+            ? c.children.map((r) => ({
+                id: r.commentId,
+                username: r.userId,
+                content: r.content,
+                date: r.createdAt,
+                isAuthor: r.userId === d.userInfo.userId,
+              }))
             : [],
         })),
       };
-      // API로 받은 like 상태 동기화
       this.liked = this.travelData.liked;
     } catch (err) {
       console.error("Failed to fetch diary detail:", err);
     } finally {
-      // 3) 요청 완료 후, 로딩 끝 신호
       emitter.emit("end-loading");
       this.loading = false;
     }
@@ -320,6 +411,7 @@ export default {
     this.renderDayMap();
   },
   methods: {
+    // ── Kakao Map Helpers ─────────────────────────────────────────────────
     loadKakaoSdk() {
       return new Promise((res, rej) => {
         if (window.kakao && window.kakao.maps)
@@ -333,7 +425,7 @@ export default {
       });
     },
     initMap() {
-      if (!this.travelData?.days?.length) return;
+      if (!this.travelData.days.length) return;
       const first = this.travelData.days[0].locations[0].coordinates;
       this.map = new kakao.maps.Map(document.getElementById("kakao-map"), {
         center: new kakao.maps.LatLng(first.lat, first.lng),
@@ -342,16 +434,12 @@ export default {
     },
     renderDayMap() {
       if (!this.map) return;
-      // 기존 마커·라인 클리어
       this.markers.forEach((m) => m.setMap(null));
-      this.markers = [];
-      if (this.polyline) {
-        this.polyline.setMap(null);
-        this.polyline = null;
-      }
+      this.polyline && this.polyline.setMap(null);
       this.distanceOverlays.forEach((o) => o.setMap(null));
-      this.distanceOverlays = [];
       this.numberOverlays.forEach((o) => o.setMap(null));
+      this.markers = [];
+      this.distanceOverlays = [];
       this.numberOverlays = [];
 
       const day = this.travelData.days[this.selectedDay];
@@ -363,7 +451,7 @@ export default {
         { offset: new kakao.maps.Point(15, 35) }
       );
 
-      day.locations.forEach((loc, idx) => {
+      day.locations.forEach((loc, i) => {
         const pos = new kakao.maps.LatLng(
           loc.coordinates.lat,
           loc.coordinates.lng
@@ -379,7 +467,7 @@ export default {
 
         const numOv = new kakao.maps.CustomOverlay({
           position: pos,
-          content: `<div class="map-marker-label">${idx + 1}</div>`,
+          content: `<div class="map-marker-label">${i + 1}</div>`,
           xAnchor: 0.5,
           yAnchor: -0.2,
           zIndex: 5,
@@ -389,8 +477,8 @@ export default {
 
         kakao.maps.event.addListener(marker, "click", () => {
           const items = document.querySelectorAll(".route-item");
-          if (items[idx])
-            items[idx].scrollIntoView({ behavior: "smooth", block: "center" });
+          items[i] &&
+            items[i].scrollIntoView({ behavior: "smooth", block: "center" });
         });
       });
 
@@ -404,12 +492,12 @@ export default {
 
       day.locations.slice(0, -1).forEach((_, i) => {
         const next = day.locations[i + 1];
-        const midLat =
-          (day.locations[i].coordinates.lat + next.coordinates.lat) / 2;
-        const midLng =
-          (day.locations[i].coordinates.lng + next.coordinates.lng) / 2;
+        const mid = new kakao.maps.LatLng(
+          (day.locations[i].coordinates.lat + next.coordinates.lat) / 2,
+          (day.locations[i].coordinates.lng + next.coordinates.lng) / 2
+        );
         const distOv = new kakao.maps.CustomOverlay({
-          position: new kakao.maps.LatLng(midLat, midLng),
+          position: mid,
           content: `<div class="distance-label">${day.distances[i]}</div>`,
           xAnchor: 0.5,
           yAnchor: 0.5,
@@ -434,6 +522,8 @@ export default {
       }
       this.map.relayout();
     },
+
+    // ── Gallery ─────────────────────────────────────────────────────────────
     openGallery(i) {
       this.currentSlide = i;
       this.galleryOpened = true;
@@ -446,13 +536,159 @@ export default {
     goToSlide(i) {
       this.currentSlide = i;
     },
+
+    // ── Day Tab ─────────────────────────────────────────────────────────────
     selectDay(i) {
       this.selectedDay = i;
       this.renderDayMap();
     },
-    toggleLike() {
+
+    // ── Like ─────────────────────────────────────────────────────────────────
+    async toggleLike() {
+      const planId = this.travelData.id;
       this.liked = !this.liked;
+      try {
+        const action = this.liked ? "like" : "unlike";
+        await client.post(`/api/v1/user/diaries/${planId}/${action}`);
+      } catch (err) {
+        this.liked = !this.liked;
+        console.error("좋아요 처리 실패:", err);
+      }
     },
+
+    // ── 댓글 Edit ───────────────────────────────────────────────────────────
+    startEdit(id, content, isReply = false, parentId = null) {
+      this.editingCommentId = id;
+      this.editingContent = content;
+      this.editingIsReply = isReply;
+      this.editingParentId = parentId;
+    },
+    cancelEdit() {
+      this.editingCommentId = null;
+      this.editingContent = "";
+      this.editingIsReply = false;
+      this.editingParentId = null;
+    },
+    async saveEdit(isReply) {
+      if (!this.editingContent.trim()) return;
+
+      try {
+        const { data: updated } = await client.patch(
+          `/api/v1/user/comments/${this.editingCommentId}`,
+          { content: this.editingContent }
+        );
+
+        if (isReply) {
+          const parent = this.travelData.comments.find(
+            (c) => c.id === this.editingParentId
+          );
+          const reply = parent.replies.find(
+            (r) => r.id === this.editingCommentId
+          );
+          reply.content = updated.content;
+          reply.date = updated.createdAt;
+        } else {
+          const comment = this.travelData.comments.find(
+            (c) => c.id === this.editingCommentId
+          );
+          comment.content = updated.content;
+          comment.date = updated.createdAt;
+        }
+      } catch (err) {
+        console.error("댓글 수정 실패:", err);
+      } finally {
+        this.cancelEdit();
+      }
+    },
+
+    // ── 댓글 생성 ───────────────────────────────────────────────────────────
+    async addComment() {
+      const content = this.newComment.trim();
+      if (!content) return;
+      try {
+        const { data: created } = await client.post("/api/v1/user/comments", {
+          diaryId: this.travelData.id,
+          content,
+          createdAt: new Date().toISOString(),
+        });
+        this.travelData.comments.push({
+          id: created.commentId,
+          username: created.userId,
+          content: created.content,
+          date: created.createdAt,
+          isAuthor: true,
+          replies: [],
+        });
+        this.newComment = "";
+      } catch (err) {
+        console.error("댓글 작성 실패:", err);
+      }
+    },
+
+    // ── 대댓글 입력폼 토글 ─────────────────────────────────────────────────
+    showReplyForm(commentId) {
+      this.replyingTo = this.replyingTo === commentId ? null : commentId;
+      this.newReply = "";
+    },
+
+    // ── 대댓글 생성 ─────────────────────────────────────────────────────────
+    async addReply(parentId) {
+      const content = this.newReply.trim();
+      if (!content) return;
+
+      try {
+        // 1) API 호출
+        const { data } = await client.post("/api/v1/user/comments/reply", {
+          diaryId: this.travelData.id,
+          parentId,
+          content,
+          createdAt: new Date().toISOString(),
+        });
+
+        // 2) 실제 댓글 데이터: children 속성이 있으면 그걸, 없으면 data 자체를 사용
+        const child = data;
+
+        // 3) 올바른 필드로 새 reply 객체 생성
+        const newReply = {
+          id: child.commentId, // ← 여기를 child.commentId 로
+          username: child.userId, // ← 여기를 child.userId 로
+          content: child.content, // ← content 도 마찬가지
+          date: child.createdAt, // ← createdAt 도 읽어오기
+          isAuthor: true,
+        };
+
+        // 4) push
+        const parent = this.travelData.comments.find((c) => c.id === parentId);
+        parent.replies.push(newReply);
+
+        // 5) 폼 리셋
+        this.replyingTo = null;
+        this.newReply = "";
+      } catch (err) {
+        console.error("대댓글 작성 실패:", err);
+      }
+    },
+
+    // ── 댓글/대댓글 삭제 ────────────────────────────────────────────────────
+    async deleteComment(id, isReply = false, parentId = null) {
+      try {
+        await client.delete(`/api/v1/user/comments/${id}`);
+        if (isReply) {
+          const parent = this.travelData.comments.find(
+            (c) => c.id === parentId
+          );
+          parent.replies = parent.replies.filter((r) => r.id !== id);
+        } else {
+          this.travelData.comments = this.travelData.comments.filter(
+            (c) => c.id !== id
+          );
+        }
+      } catch (err) {
+        console.error("댓글 삭제 실패:", err);
+      }
+    },
+
+    // ── UTIL ──────────────────────────────────────────────────────────────────
     formatDate(d) {
       return new Date(d).toLocaleDateString("ko-KR", {
         month: "short",
@@ -465,39 +701,10 @@ export default {
       const m = Math.floor(diff / 60000),
         h = Math.floor(m / 60),
         D = Math.floor(h / 24);
-      if (m < 60) return `${m}분 전`;
-      if (h < 24) return `${h}시간 전`;
-      if (D < 7) return `${D}일 전`;
+      if (m < 60) return `${m} minutes ago`;
+      if (h < 24) return `${h} hours ago`;
+      if (D < 7) return `${D} days ago`;
       return new Date(d).toLocaleDateString("ko-KR");
-    },
-    addComment() {
-      const c = this.newComment.trim();
-      if (!c) return;
-      this.travelData.comments.push({
-        id: Date.now(),
-        username: this.currentUser,
-        content: c,
-        date: new Date().toISOString(),
-        replies: [],
-      });
-      this.newComment = "";
-    },
-    showReplyForm(id) {
-      this.replyingTo = id;
-      this.newReply = "";
-    },
-    addReply(parentId) {
-      const c = this.newReply.trim();
-      if (!c) return;
-      const parent = this.travelData.comments.find((x) => x.id === parentId);
-      parent.replies.push({
-        id: Date.now(),
-        username: this.currentUser,
-        content: c,
-        date: new Date().toISOString(),
-      });
-      this.replyingTo = null;
-      this.newReply = "";
     },
   },
 };
@@ -691,8 +898,8 @@ export default {
   font-size: 14px;
 }
 .like-btn {
-  width: 65px;
-  height: 65px;
+  width: 72px;
+  height: 72px;
   cursor: pointer;
 }
 
@@ -1181,5 +1388,37 @@ export default {
   font-size: 14px;
   line-height: 1.6;
   padding: 0;
+}
+
+.comment-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.comment-action {
+  background: none;
+  border: none;
+  color: #c2372f;
+  cursor: pointer;
+  font-size: 14px;
+}
+.comment-edit-textarea,
+.reply-edit-textarea {
+  width: 100%;
+  min-height: 60px;
+  padding: 8px;
+  margin-bottom: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
+  resize: none;
+}
+.comment-cancel-btn {
+  background: #aaa;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  margin-left: 8px;
+  cursor: pointer;
 }
 </style>
