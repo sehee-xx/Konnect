@@ -1,33 +1,48 @@
-<!-- src/App.vue -->
 <template>
-  <!-- 1) 전역 헤더 -->
+  <!-- loading true일 때만 로더가 보입니다 -->
+  <LandingLoader v-if="loading" />
+
   <Header
     v-if="!route.meta.noHeader"
     :is-logged-in="auth.isLoggedIn"
     @logout="auth.logout"
-  ></Header>
-  <!-- 2) 라우터 뷰: 각 페이지(Login.vue 등)에서 로그인 성공 시 'login' 이벤트를 emit -->
-  <router-view @login="(userInfo) => auth.login(userInfo)" />
-
-  <!-- 3) 다국어 토글 버튼 (기존) -->
+  />
+  <router-view @login="(user) => auth.login(user)" />
   <button class="btn-translate" @click="toggleLocale">
     {{ currentLocale === "en" ? "KR" : "EN" }}
   </button>
 </template>
 
 <script setup>
-import { computed } from "vue";
-import { useI18n } from "vue-i18n";
+import { ref, onMounted, onUnmounted, computed } from "vue";
 import { useRoute } from "vue-router";
+import { useI18n } from "vue-i18n";
 import Header from "./components/Header.vue";
-import { auth } from "../src/stores/auth";
+import LandingLoader from "./components/LandingLoader.vue";
+import { auth } from "./stores/auth";
+import { emitter } from "../src/plugins/emitter";
 
-const { locale } = useI18n();
 const route = useRoute();
+const { locale } = useI18n();
 const currentLocale = computed(() => locale.value);
 function toggleLocale() {
   locale.value = locale.value === "en" ? "ko" : "en";
 }
+
+const loading = ref(false);
+
+onMounted(() => {
+  emitter.on("start-loading", () => {
+    loading.value = true;
+  });
+  emitter.on("end-loading", () => {
+    loading.value = false;
+  });
+});
+onUnmounted(() => {
+  emitter.off("start-loading");
+  emitter.off("end-loading");
+});
 </script>
 
 <style>

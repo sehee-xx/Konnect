@@ -23,7 +23,7 @@ const routes = [
     meta: { noHeader: true },
   },
   {
-    path: "/list",
+    path: "/List",
     name: "List",
     component: List,
   },
