@@ -1,12 +1,13 @@
+<!-- src/views/DestinationPlans.vue -->
 <template>
-  <Header></Header>
+  <Header />
+
   <div class="destination-page">
-    <!-- <div class="chatbot-widget">
-        <Chatbot />
-      </div> -->
     <div class="container">
       <div class="destination-header">
-        <h2 class="page-title">{{ destination.name }} Plans</h2>
+        <h2 class="page-title">{{ destination.area }} Plans</h2>
+
+        <!-- 필터 -->
         <div class="filters">
           <button
             class="filter-btn"
@@ -24,39 +25,78 @@
           </button>
         </div>
       </div>
+
+      <!-- 플랜 카드 그리드 -->
       <div class="plans-grid">
-        <TravelCard v-for="plan in sortedPlans" :key="plan.id" :plan="plan" />
+        <router-link
+          v-for="plan in plans"
+          :key="plan.id"
+          :to="{ name: 'TravelDetail', params: { planId: plan.id } }"
+          class="card-link"
+        >
+          <TravelCard :plan="plan" />
+        </router-link>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import axios from "axios";
 import Header from "../components/Header.vue";
 import TravelCard from "../components/TravelCard.vue";
-import { destinations } from "../data";
+import { destinations as allDestinations } from "../data";
+import { emitter } from "../plugins/emitter";
 
+// 1) 라우터에서 regionId 받아오기
 const route = useRoute();
 const router = useRouter();
 const regionId = route.params.regionId;
 
+// 2) 필터 상태 (query.sort 에서 초기값)
 const currentSort = ref(route.query.sort || "popular");
 
-const destination = computed(
-  () => destinations.find((d) => d.id === regionId) || { name: "", plans: [] }
-);
+// 3) 다 불러온 플랜을 담을 배열
+const plans = ref([]);
 
-const sortedPlans = computed(() => {
-  const arr = [...destination.value.plans];
-  return currentSort.value === "popular"
-    ? arr.sort((a, b) => b.likes - a.likes)
-    : arr.reverse();
+// 4) 지역 이름만 가져오기
+const destination = computed(() => {
+  return (
+    allDestinations.find((d) => d.id === regionId) || { name: "", plans: [] }
+  );
 });
 
+// 5) API 호출 함수
+async function fetchPlans() {
+  emitter.emit("start-loading");
+  const sortedBy = currentSort.value === "popular" ? "MOST_LIKED" : "RECENT";
+  try {
+    const res = await axios.get(
+      `/api/v1/all/diaries?areaId=${regionId}&topOnly=false&sortedBy=${sortedBy}`
+    );
+    // mapDiary 는 이전에 작성하신 함수 그대로 재사용하세요
+    plans.value = res.data.map(mapDiary);
+  } catch (err) {
+    console.error("DestinationPlans 로드 실패:", err);
+  } finally {
+    emitter.emit("end-loading"); // (3) 요청 완료 후 로딩 종료 알림
+  }
+}
+
+// 6) mounted 시, 그리고 필터(query) 변경 시 재호출
+onMounted(fetchPlans);
+watch(
+  () => route.query.sort,
+  (newSort) => {
+    currentSort.value = newSort || "popular";
+    fetchPlans();
+  }
+);
+
+// 7) 버튼 클릭 시 query 갱신
 function setFilter(type) {
-  currentSort.value = type;
   router.replace({
     name: "DestinationPlans",
     params: { regionId },
@@ -64,12 +104,29 @@ function setFilter(type) {
   });
 }
 
-watch(
-  () => route.query.sort,
-  (val) => {
-    currentSort.value = val || "popular";
-  }
-);
+// ─── mapDiary 함수 (이전 코드와 완전히 동일) ──────────────────────
+function mapDiary(diary) {
+  const id = diary.diaryId;
+  const image =
+    diary.thumbnail ||
+    (Array.isArray(diary.images) && diary.images.length
+      ? diary.images[0]
+      : "/assets/default-thumb.png");
+  const likes = diary.likeCount;
+  const tags = diary.tags?.map((t) => t.nameEng || t.name) || [];
+  const fmt = (s) => s.slice(5, 10).replace("-", ".");
+  const dateRange = `${fmt(diary.startDate)} – ${fmt(diary.endDate)}`;
+
+  return {
+    id,
+    title: diary.title,
+    image,
+    likes,
+    tags,
+    dateRange,
+    status: diary.status,
+  };
+}
 </script>
 
 <style scoped>
