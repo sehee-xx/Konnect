@@ -16,7 +16,7 @@
               alt="Kakao"
               @click="socialLogin('kakao')"
             />
-             <img
+            <img
               class="form__icon"
               src="../assets/login-google.png"
               alt="Google"

@@ -71,11 +71,39 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
 import TravelCard from "../components/TravelCard.vue";
 import { categories as allCategories } from "../data";
 import { emitter } from "../plugins/emitter";
+import { auth } from "../stores/auth";
+import client from "../api/client";
+
+const route = useRoute();
+const router = useRouter();
+const authStore = auth;
+
+onMounted(() => {
+  const { Authorization: token, user } = route.query;
+  if (!token) return;
+
+  // 파싱
+  let userInfo = {};
+  if (user) {
+    try {
+      userInfo = JSON.parse(user);
+    } catch (e) {
+      console.warn(e);
+    }
+  }
+
+  // 로그인 처리
+  authStore.login(userInfo, token);
+  client.defaults.headers.common["Authorization"] = token;
+
+  // URL 정리
+  router.replace({ path: route.path, query: {} });
+});
 
 // ── 1. API 응답(diary) → 컴포넌트가 기대하는 plan 포맷으로 매핑 ─────────────────
 function mapDiary(diary) {
@@ -101,8 +129,6 @@ function mapDiary(diary) {
   };
 }
 // ────────────────────────────────────────────────────────────────────────────────
-
-const router = useRouter();
 
 // 상위 4개 좋아요 많은 플랜
 const topLovedPlans = ref([]);
