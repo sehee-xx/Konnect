@@ -560,7 +560,7 @@ const loadKakao = () =>
     if (window.kakao && window.kakao.maps) return window.kakao.maps.load(res);
     const s = document.createElement("script");
     s.src =
-      "https://dapi.kakao.com/v2/maps/sdk.js?appkey=a7d3be3a0aa9c466cfb5bb894d9e7795&libraries=services&autoload=false";
+      "https://dapi.kakao.com/v2/maps/sdk.js?appkey=73816551dd3f5b0dccade36971e6f556&libraries=services&autoload=false";
     s.onload = () => window.kakao.maps.load(res);
     s.onerror = rej;
     document.head.appendChild(s);
