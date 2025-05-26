@@ -1241,7 +1241,6 @@ body {
 
 .trip-card:hover {
   z-index: 10;
-  transform: translateY(-8px) scale(1.02);
 }
 
 .card-image {
