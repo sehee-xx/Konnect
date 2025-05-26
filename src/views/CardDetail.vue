@@ -824,8 +824,7 @@ export default {
 }
 .thumb-list {
   width: 100px;
-  padding: 8px;
-  background: #111;
+  padding: 10px 30px;
   overflow-y: auto;
 }
 .thumb-list::-webkit-scrollbar {
@@ -850,6 +849,7 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 16px;
+  margin-bottom: 60px;
   overflow: hidden;
   overflow: auto;
   scrollbar-width: none;
