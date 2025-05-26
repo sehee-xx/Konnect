@@ -5,7 +5,7 @@
   <div class="destination-page">
     <div class="container">
       <div class="destination-header">
-        <h2 class="page-title">{{ destination.area }} Plans</h2>
+        <h2 class="page-title">{{ regionName }} plans</h2>
 
         <!-- 필터 -->
         <div class="filters">
@@ -61,6 +61,11 @@ const currentSort = ref(route.query.sort || "popular");
 // 3) 다 불러온 플랜을 담을 배열
 const plans = ref([]);
 
+const regionName = computed(() => {
+  if (plans.value.length === 0) return "";
+  return plans.value[0].area.nameEng;
+});
+
 // 4) 지역 이름만 가져오기
 const destination = computed(() => {
   return (
@@ -76,8 +81,11 @@ async function fetchPlans() {
     const res = await axios.get(
       `/api/v1/all/diaries?areaId=${regionId}&topOnly=false&sortedBy=${sortedBy}`
     );
+    console.log(res.data);
     // mapDiary 는 이전에 작성하신 함수 그대로 재사용하세요
     plans.value = res.data.map(mapDiary);
+
+    console.log(plans.value);
   } catch (err) {
     console.error("DestinationPlans 로드 실패:", err);
   } finally {
@@ -125,6 +133,7 @@ function mapDiary(diary) {
     tags,
     dateRange,
     status: diary.status,
+    area: diary.area,
   };
 }
 </script>
