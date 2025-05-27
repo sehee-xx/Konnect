@@ -17,7 +17,7 @@
           Back to My Trips
         </router-link>
 
-        <div v-if="!isReadonly" class="header-actions">
+        <div class="header-actions">
           <button class="btn-save" @click="saveDraft" :disabled="isReadonly">
             Save Draft
           </button>
