@@ -1,6 +1,6 @@
 <!-- src/components/Header.vue -->
 <template>
-  <header class="site-header">
+  <header class="site-header" ref="headerRef">
     <div class="header-inner">
       <div class="logo" @click="goHome">
         <img src="../assets/logo.png" alt="Logo" />
@@ -28,12 +28,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.css";
 
-// 아래 두 줄을 추가하세요
 import { auth } from "../stores/auth";
 import client from "../api/client";
 
@@ -43,6 +42,7 @@ const props = defineProps({
 
 const isLoggedIn = computed(() => !!auth.user);
 const emit = defineEmits(["logout"]);
+const headerRef = ref(null);
 
 const router = useRouter();
 const showProfileMenu = ref(false);
@@ -50,9 +50,24 @@ const search = ref({ location: "", checkin: "", checkout: "" });
 const checkinRef = ref(null);
 const checkoutRef = ref(null);
 
+function onClickOutside(e) {
+  if (
+    showProfileMenu.value &&
+    headerRef.value &&
+    !headerRef.value.contains(e.target)
+  ) {
+    showProfileMenu.value = false;
+  }
+}
+
 onMounted(() => {
   flatpickr(checkinRef.value, datePickerOpts);
   flatpickr(checkoutRef.value, datePickerOpts);
+  document.addEventListener("click", onClickOutside);
+});
+
+onUnmounted(() => {
+  document.removeEventListener("click", onClickOutside);
 });
 
 const datePickerOpts = {
