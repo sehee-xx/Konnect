@@ -28,7 +28,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.css";
@@ -40,6 +40,8 @@ import client from "../api/client";
 const props = defineProps({
   isLoggedIn: { type: Boolean, required: true },
 });
+
+const isLoggedIn = computed(() => !!auth.user);
 const emit = defineEmits(["logout"]);
 
 const router = useRouter();
