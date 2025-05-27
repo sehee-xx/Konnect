@@ -205,6 +205,12 @@ export const useUserPlans = defineStore("userPlans", {
         emitter.emit("end-loading");
       }
     },
+
+    // 큐레이션 여행 날짜 뽑아오는 함수
+    getTripDates(tripId) {
+      const trip = this.trips.find((t) => t.id === tripId);
+      return trip ? { dates: trip.dates } : { dates: [] };
+    },
   },
 });
 
