@@ -360,6 +360,7 @@ function isFav(item) {
 
 // add to trip handler (unchanged)
 async function handleAddToTrip(place) {
+  // 1) 편집 중 트립이 없으면 안내
   if (!editingTrips.value.length) {
     return Swal.fire({
       icon: "info",
@@ -367,7 +368,79 @@ async function handleAddToTrip(place) {
       text: "Please create a trip first.",
     });
   }
-  // … (same as before) …
+
+  // 2) 어떤 트립에 추가할지 선택
+  const { value: tripId } = await Swal.fire({
+    title: "Select a Trip to Add",
+    input: "select",
+    inputOptions: editingTrips.value.reduce((opts, t) => {
+      opts[t.diaryId] = t.title;
+      return opts;
+    }, {}),
+    inputPlaceholder: "Choose a trip",
+    showCancelButton: true,
+  });
+  if (!tripId) return;
+
+  try {
+    // 3) 선택한 트립 불러오기
+    const trip = await userPlans.loadPlan(Number(tripId));
+
+    // 4) 사용자가 추가할 "날짜(day)" 선택
+    const dayOptions = trip.routes.reduce((opts, r, idx) => {
+      opts[idx] = r.date; // 예: "0": "2025-05-26"
+      return opts;
+    }, {});
+    const { value: dayIndex } = await Swal.fire({
+      title: "Select a Date",
+      input: "select",
+      inputOptions: dayOptions,
+      inputPlaceholder: "Choose a date",
+      showCancelButton: true,
+    });
+    if (dayIndex === undefined) return; // 취소
+
+    // 5) 선택된 날짜(dayIndex)의 마지막 일정에 place 추가
+    trip.routes[dayIndex].items.push({
+      visitedDate: trip.routes[dayIndex].date, // 선택한 날짜
+      visitedTime: "09:00:00",
+      distance: 0,
+      title: place.title,
+      latitude: place.latitude,
+      longitude: place.longitude,
+    });
+
+    // 6) 수정된 trip 전체를 서버에 저장
+    await userPlans.updatePlan(Number(tripId), {
+      diaryId: Number(tripId),
+      title: trip.title,
+      content: trip.content,
+      areaId: trip.area.id,
+      tags: trip.tags.map((t) => t.id),
+      startDate: trip.startDate,
+      endDate: trip.endDate,
+      status: trip.status ?? "editing",
+      routes: trip.routes,
+      thumbnail: trip.thumbnail,
+      images: trip.images,
+    });
+
+    // 7) 성공 알림
+    await Swal.fire({
+      icon: "success",
+      title: "Added!",
+      text: `"${place.title}" has been added to "${trip.title}" on ${trip.routes[dayIndex].date}.`,
+    });
+
+    router.push("/mypage");
+  } catch (e) {
+    console.error(e);
+    await Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: "Failed to add place. Please try again.",
+    });
+  }
 }
 
 // initial load
